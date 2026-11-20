@@ -6,7 +6,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #14151f;
+      background: #0d1117;
       color: #e2e8f0;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       display: flex;
@@ -19,7 +19,7 @@
       position: relative;
       flex: 1;
       height: 100vh;
-      background: radial-gradient(circle at 50% 45%, #26223d 0%, #141522 100%);
+      background: radial-gradient(circle at 50% 45%, #13221c 0%, #090d12 100%);
       overflow: hidden;
     }
     #stage-canvas { width: 100%; height: 100%; display: block; }
@@ -29,7 +29,7 @@
       top: 12px;
       left: 12px;
       z-index: 10;
-      background: rgba(18, 20, 30, 0.85);
+      background: rgba(13, 17, 23, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.14);
       padding: 6px 12px;
       border-radius: 8px;
@@ -48,13 +48,13 @@
       z-index: 10;
       display: flex;
       gap: 6px;
-      background: rgba(16, 18, 28, 0.9);
+      background: rgba(13, 17, 23, 0.92);
       padding: 6px 10px;
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.14);
     }
     .ctrl-btn {
-      background: #232638;
+      background: #1e2433;
       color: #e2e8f0;
       border: 1px solid rgba(255, 255, 255, 0.12);
       padding: 5px 10px;
@@ -63,14 +63,14 @@
       cursor: pointer;
       white-space: nowrap;
     }
-    .ctrl-btn:hover { background: #323650; }
+    .ctrl-btn:hover { background: #2c354a; }
     .ctrl-btn.active { background: #4f46e5; border-color: #818cf8; color: #fff; }
 
     /* RIGHT SIDEBAR */
     #sidebar {
       width: 480px;
       height: 100vh;
-      background: #11131c;
+      background: #11141d;
       border-left: 1px solid rgba(255, 255, 255, 0.1);
       overflow-y: auto;
       padding: 12px 14px 28px;
@@ -96,7 +96,7 @@
     .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 
     .pose-btn {
-      background: #1b1e2e;
+      background: #1a1f2e;
       color: #d8deef;
       border: 1px solid rgba(255, 255, 255, 0.09);
       border-radius: 6px;
@@ -109,7 +109,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .pose-btn:hover { background: #272c42; border-color: rgba(255, 255, 255, 0.22); }
+    .pose-btn:hover { background: #262d42; border-color: rgba(255, 255, 255, 0.22); }
     .pose-btn.active {
       background: #2b3254;
       border-color: #6366f1;
@@ -133,9 +133,9 @@
   <!-- LEFT 3D VIEWPORT -->
   <div id="stage-wrap">
     <div id="top-loader">
-      <strong>Load VRM:</strong>
+      <strong>Load Your VRM:</strong>
       <input type="file" id="vrm-file" accept=".vrm" />
-      <span id="status" style="color:#a5b4fc;">Loading default VRM character...</span>
+      <span id="status" style="color:#6ee7b7;">Stage Ready</span>
     </div>
 
     <div id="bottom-controls">
@@ -205,7 +205,7 @@
         <button class="pose-btn" onclick="setStance('dash', this)">⚡ Cyber-Dash</button>
         <button class="pose-btn" onclick="setStance('dj', this)">🎧 Beat-Drop DJ</button>
         <button class="pose-btn" onclick="setStance('stargazer', this)">🌠 Star-Gazer</button>
-        <button class="pose-btn" id="crown-toggle" onclick="toggleCrown()">👑 Crown Summon (Master)</button>
+        <button class="pose-btn" id="crown-toggle" onclick="toggleCrown()">👑 Crown Summon</button>
       </div>
     </div>
 
@@ -223,7 +223,7 @@
       <div class="section-title">CUSTOM STAGE BACKGROUNDS (ILLUSTRATED SCENES)</div>
       <div class="grid-2">
         <button class="pose-btn" onclick="setBg('cyber', this)">🌃 Cyber Tokyo Rooftop</button>
-        <button class="pose-btn active" onclick="setBg('sakura', this)">🌸 Sakura Shrine Night</button>
+        <button class="pose-btn" onclick="setBg('sakura', this)">🌸 Sakura Shrine Night</button>
         <button class="pose-btn" onclick="setBg('skylounge', this)">🏙️ Sky Lounge Penthouse</button>
         <button class="pose-btn" onclick="setBg('omnialobby', this)">💠 Omnia Neon Lobby</button>
         <button class="pose-btn" onclick="setBg('nebula', this)">🌌 Starlight Nebula</button>
@@ -236,5 +236,5 @@
     <div>
       <div class="section-title">ATMOSPHERES & MOVING 3D PARTICLES</div>
       <div class="grid-2">
-        <button class="pose-btn active" onclick="setFx('petals', this)">🌸 Sakura Glitch (Petals)</button>
+        <button class="pose-btn" onclick="setFx('petals', this)">🌸 Sakura Glitch (Petals)</button>
         <button class="pose-btn" onclick="setFx('embers', this)">🔥 Aether Eclipse (Embers)</button>
