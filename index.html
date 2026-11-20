@@ -135,7 +135,7 @@
     <div id="top-loader">
       <strong>VRM:</strong>
       <input type="file" id="vrm-file" accept=".vrm" />
-      <span id="status" style="color:#6ee7b7;">Stage Active — Upload your .vrm</span>
+      <span id="status" style="color:#6ee7b7;">Ready — Select your .vrm file</span>
     </div>
 
     <div id="bottom-controls">
@@ -197,7 +197,8 @@
 
     <div>
       <div class="section-title">ORIGINAL OMNIA STANCES & FX</div>
-      <div class="grid-2">
+      <div class="grid-2" id="stance-grid">
+        <button class="pose-btn active" onclick="setStance('none', this)">🧍 Standard Grounded</button>
         <button class="pose-btn" onclick="setStance('float', this)">✨ Zero-G Float</button>
         <button class="pose-btn" onclick="setStance('holo', this)">💠 Holo-Stream</button>
         <button class="pose-btn" onclick="setStance('arcade', this)">🕹️ Arcade Win</button>
@@ -205,13 +206,13 @@
         <button class="pose-btn" onclick="setStance('dash', this)">⚡ Cyber-Dash</button>
         <button class="pose-btn" onclick="setStance('dj', this)">🎧 Beat-Drop DJ</button>
         <button class="pose-btn" onclick="setStance('stargazer', this)">🌠 Star-Gazer</button>
-        <button class="pose-btn" id="crown-toggle" onclick="toggleCrown()">👑 Crown Summon</button>
+        <button class="pose-btn active" id="crown-toggle" onclick="toggleCrown()">👑 Crown Summon</button>
       </div>
     </div>
 
     <div>
       <div class="section-title">BODY MOVEMENTS & ACTIONS</div>
-      <div class="grid-2">
+      <div class="grid-2" id="action-grid">
         <button class="pose-btn" onclick="setStance('sprint', this)">🏃 Neon Sprint</button>
         <button class="pose-btn" onclick="setStance('skyleap', this)">🚀 Sky Leap</button>
         <button class="pose-btn" onclick="setHand('clap', this)">👏 Hyper Clap</button>
@@ -237,4 +238,3 @@
       <div class="section-title">ATMOSPHERES & MOVING 3D PARTICLES</div>
       <div class="grid-2">
         <button class="pose-btn" onclick="setFx('petals', this)">🌸 Sakura Glitch (Petals)</button>
-        <button class="pose-btn" onclick="setFx('embers', this)">🔥 Aether Eclipse (Embers)</button>
