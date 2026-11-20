@@ -1,5 +1,5 @@
 import * as THREE from "https://esm.sh/three";
-import { GLTFLoader } from "https://esm.sh/three/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "https://esm.sh//three/examples/jsm/loaders/GLTFLoader.js";
 
 const status = document.getElementById('status');
 const box = document.getElementById('stage-box');
@@ -35,21 +35,29 @@ document.querySelectorAll('.light-btns button').forEach(btn => {
 });
 
 const loader = new GLTFLoader();
+
+function showAvatar(gltf, label) {
+  if (vrmModel) scene.remove(vrmModel);
+  vrmModel = gltf.scene;
+  vrmModel.rotation.y = 0;
+  scene.add(vrmModel);
+  status.innerText = label + ' Active • Drag to Rotate';
+}
+
+status.innerText = 'Loading Niecee C...';
+loader.load('./Niecee%20C.vrm', gltf => {
+  showAvatar(gltf, 'Niecee C');
+}, undefined, () => {
+  status.innerText = '3D Grid Active • Click Choose File';
+});
+
 document.getElementById('file-picker').onchange = e => {
   const file = e.target.files.item(0);
   if (!file) return;
   status.innerText = 'Loading ' + file.name + '...';
   const reader = new FileReader();
   reader.onload = ev => {
-    loader.parse(ev.target.result, '', gltf => {
-      if (vrmModel) scene.remove(vrmModel);
-      vrmModel = gltf.scene;
-      vrmModel.rotation.y = Math.PI;
-      scene.add(vrmModel);
-      status.innerText = 'Niecee C Active • Drag to Rotate';
-    }, err => {
-      status.innerText = 'Error: ' + err;
-    });
+    loader.parse(ev.target.result, '', gltf => showAvatar(gltf, file.name));
   };
   reader.readAsArrayBuffer(file);
 };
