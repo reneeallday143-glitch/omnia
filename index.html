@@ -18,7 +18,7 @@
       position: relative;
       flex: 1;
       height: 100vh;
-      background: radial-gradient(circle at 50% 45%, #19132e 0%, #090d12 100%);
+      background: radial-gradient(circle at 50% 45%, #1c1236 0%, #090d12 100%);
       overflow: hidden;
     }
     #stage-canvas { width: 100%; height: 100%; display: block; }
@@ -100,15 +100,6 @@
       box-shadow: 0 0 0 1px #6366f1 inset;
     }
   </style>
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://jsdelivr.net",
-      "three/addons/": "https://jsdelivr.net",
-      "@pixiv/three-vrm": "https://jsdelivr.net"
-    }
-  }
-  </script>
 </head>
 <body>
 
@@ -221,5 +212,14 @@
     </div>
   </div>
 
-  <script type="module">
-    import * as THREE from 'three';
+  <!-- Standard UMD Three.js + OrbitControls (zero importmap / CDN module failures) -->
+  <script src="https://jsdelivr.net"></script>
+  <script src="https://jsdelivr.net"></script>
+
+  <script>
+    const stageWrap = document.getElementById('stage-wrap');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(34, stageWrap.clientWidth / stageWrap.clientHeight, 0.05, 30);
+    camera.position.set(0, 1.25, 2.35);
+
