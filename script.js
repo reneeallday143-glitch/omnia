@@ -1,5 +1,5 @@
-import * as THREE from "https://esm.sh";
-import { GLTFLoader } from "https://esm.sh/examples/jsm/loaders/GLTFLoader.js";
+import * as THREE from "https://esm.sh/three";
+import { GLTFLoader } from "https://esm.sh/three/examples/jsm/loaders/GLTFLoader.js";
 
 const status = document.getElementById('status');
 const box = document.getElementById('stage-box');
