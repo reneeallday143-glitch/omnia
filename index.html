@@ -2,115 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>OMNIA — 3D Anime World</title>
-  <link rel="stylesheet" href="./style.css" />
+  <title>VRM Full Arm, Hand & Finger Sign Studio</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #12141a; font-family: system-ui, sans-serif; color: #fff; }
+    #ui { position: fixed; top: 14px; left: 14px; z-index: 10; display: flex; flex-direction: column; gap: 10px; max-width: 95vw; }
+    .panel { background: rgba(20, 24, 34, 0.85); backdrop-filter: blur(10px); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .chip { background: #262c3d; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); padding: 6px 11px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.15s; }
+    .chip:hover { background: #363f57; }
+    .chip.active { background: #6366f1; color: #fff; border-color: #818cf8; font-weight: 600; }
+    input[type="file"] { font-size: 12px; color: #cbd5e1; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://jsdelivr.net",
+      "three/addons/": "https://jsdelivr.net",
+      "@pixiv/three-vrm": "https://jsdelivr.net"
+    }
+  }
+  </script>
 </head>
 <body>
-  <div class="omnia-app">
-    <header>
-      <div class="brand">OMNIA <span>3D ANIME</span></div>
-      <div class="coins">✦ 250 Coins</div>
-    </header>
-    <div class="main">
-      <div class="stage" id="stage-box">
-        <div class="badge" id="status">Loading Niecee C...</div>
-        <canvas id="stage-canvas"></canvas>
-        <div class="controls" style="flex-wrap: wrap; justify-content: center; width: 92%;">
-          <button id="spin-btn">🧍 Stand Still (Paused)</button>
-          <button id="flip-btn">🔄 Flip 180°</button>
-          <button id="zoom-in-btn">🔍+ Zoom In</button>
-          <button id="zoom-out-btn">🔍- Zoom Out</button>
-          <button id="face-cam-btn">😊 Face Cam</button>
-        </div>
-      </div>
-      <div class="panel" style="overflow-y: auto;">
-        <h2>Omnia Avatar Studio</h2>
-        <p>Upload your custom VRoid (.vrm) character:</p>
-        <input type="file" id="file-picker" accept=".vrm,.glb" class="upload-btn" />
-        <label>OMNIA USERNAME</label>
-        <input type="text" value="Niecee_C" />
-
-        <label>ALL FACIAL EXPRESSIONS (12)</label>
-        <div class="face-btns" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
-          <button data-face="neutral">😐 Neutral</button>
-          <button data-face="joy">😄 Happy</button>
-          <button data-face="grin">😁 Big Grin</button>
-          <button data-face="sorrow">😢 Sad</button>
-          <button data-face="cry">😭 Crying</button>
-          <button data-face="angry">😡 Angry</button>
-          <button data-face="furious">🤬 Furious</button>
-          <button data-face="surprised">😲 Surprised</button>
-          <button data-face="shocked">😱 Shocked</button>
-          <button data-face="wink">😉 Wink</button>
-          <button data-face="smug">😏 Smug</button>
-          <button data-face="sleepy">😴 Sleepy</button>
-        </div>
-
-        <label>SIGNATURE HAND GESTURES</label>
-        <div class="hand-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button data-hand="open">🖐️ Relaxed Hands</button>
-          <button data-hand="peace">✌️ Peace Sign</button>
-          <button data-hand="kheart">🫰 Korean Heart</button>
-          <button data-hand="rock">🤘 Rock On</button>
-          <button data-hand="omniaSign">💠 Omnia Prism Sign</button>
-          <button data-hand="rebel1">🖕 Middle Finger</button>
-          <button data-hand="rebel2">🖕🖕 Double Middle Finger</button>
-        </div>
-
-        <label>CREATOR ATTITUDE POSES</label>
-        <div class="pose-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button data-action="idle">🧍 Arms Down (Idle)</button>
-          <button data-action="hips">🙌 Hands on Hips</button>
-          <button data-action="folded">🙅 Arms Folded</button>
-          <button data-action="gangster">😎 Gangster Lean</button>
-          <button data-action="royal">👑 Royal Flex</button>
-          <button data-action="wave">👋 Hero Wave</button>
-        </div>
-
-        <label>ORIGINAL OMNIA STANCES & FX</label>
-        <div class="stance-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button data-action="zerog">🌌 Zero-G Float</button>
-          <button data-action="holo">📡 Holo-Stream</button>
-          <button data-action="arcade">🏆 Arcade Win</button>
-          <button data-action="domain">🔮 Domain Seal</button>
-          <button data-action="dash">⚡ Cyber-Dash</button>
-          <button data-action="dj">🎧 Beat-Drop DJ</button>
-          <button data-action="star">✨ Star-Gazer</button>
-          <button data-action="crown">👑 Crown Summon</button>
-        </div>
-
-        <label>BODY MOVEMENTS & ACTIONS</label>
-        <div class="move-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button data-action="run">🏃 Neon Sprint</button>
-          <button data-action="jump">⬆️ Sky Leap</button>
-          <button data-action="clap">👏 Hype Clap</button>
-          <button data-action="spinKick">🌀 Vortex Spin</button>
-        </div>
-
-        <label>CUSTOM STAGE BACKGROUNDS (ILLUSTRATED SCENES)</label>
-        <div class="bg-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button data-bg="tokyo">🌃 Cyber Tokyo Rooftop</button>
-          <button data-bg="sakuraNight">🌸 Sakura Shrine Night</button>
-          <button data-bg="penthouse">🏙️ Sky Lounge Penthouse</button>
-          <button data-bg="lobby">🎮 Omnia Neon Lobby</button>
-          <button data-bg="galaxy">🌌 Starlight Nebula</button>
-          <button data-bg="miami">🌴 Miami Vaporwave</button>
-          <button data-bg="crimson">🔥 Crimson Boss Arena</button>
-          <button data-bg="studio">📸 Clean Photo Studio</button>
-        </div>
-
-        <label>ATMOSPHERES & MOVING 3D PARTICLES</label>
-        <div class="light-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button data-theme="sakura">🌸 Sakura Glitch (Petals)</button>
-          <button data-theme="eclipse">🌑 Aether Eclipse (Embers)</button>
-          <button data-theme="biolume">🪼 Abyssal Biolume (Bubbles)</button>
-          <button data-theme="prism">✨ Celestial Prism (Sparks)</button>
-          <button data-theme="overdrive">⚡ Void Overdrive (Lasers)</button>
-          <button data-theme="solaris">🌅 Solaris Mirage (Motes)</button>
-        </div>
-      </div>
+  <div id="ui">
+    <div class="panel">
+      <label><strong>Load VRM:</strong> <input type="file" id="vrm-file" accept=".vrm" /></label>
+      <span id="status" style="font-size:12px;color:#94a3b8;">Upload a .vrm character to start</span>
+    </div>
+    <div class="panel" id="hand-bar">
+      <button class="chip active" onclick="setHand('relaxed', this)">🫳 Relaxed</button>
+      <button class="chip" onclick="setHand('crossedArms', this)">🙅 Crossed Arms</button>
+      <button class="chip" onclick="setHand('open', this)">✋ Open</button>
+      <button class="chip" onclick="setHand('peace', this)">✌️ Peace</button>
+      <button class="chip" onclick="setHand('kheart', this)">🫰 Finger Heart</button>
+      <button class="chip" onclick="setHand('westside', this)">🇼 West Coast</button>
+      <button class="chip" onclick="setHand('vulcan', this)">🖖 Vulcan</button>
+      <button class="chip" onclick="setHand('shaka', this)">🤙 Shaka</button>
+      <button class="chip" onclick="setHand('rock', this)">🤘 Horns</button>
+      <button class="chip" onclick="setHand('bird', this)">🖕 Single</button>
+      <button class="chip" onclick="setHand('rebel2', this)">🖕🖕 Double</button>
+      <button class="chip" onclick="setHand('omniaSign', this)">🔺 Omnia Prism</button>
+      <button class="chip" onclick="setHand('worldFlex', this)">👑 World Flex</button>
+      <button class="chip" id="crown-btn" onclick="toggleCrown()">✨ Crown: ON</button>
     </div>
   </div>
-<script type="module" src="./script.js?v=10"></script>
+  <script type="module" src="./script.js"></script>
 </body>
 </html>
