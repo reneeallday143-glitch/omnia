@@ -5,7 +5,7 @@ const status = document.getElementById('status');
 const box = document.getElementById('stage-box');
 const canvas = document.getElementById('stage-canvas');
 let vrmModel = null, spin = false, isDragging = false, prevX = 0;
-let currentAction = 'idle', currentHand = 'open', currentFace = 'neutral';
+let currentAction = 'idle', currentHand = 'open', currentFace = 'neutral', currentParticleMode = 'sakura';
 let clock = new THREE.Clock(), baseY = 0, bones = {}, faceMeshes = [];
 let camZ = 2.65, camY = 1.15;
 
@@ -23,6 +23,22 @@ rim.position.set(-1.5, 1.5, -1.5);
 const grid = new THREE.GridHelper(3, 12, 0x7c5cff, 0x323d5e);
 scene.add(light, rim, new THREE.AmbientLight(0xffffff, 0.9), grid);
 
+// 3D Moving Particle System (160 Floating Petals / Embers / Bubbles / Sparks)
+const particleCount = 160;
+const pGeo = new THREE.BufferGeometry();
+const pPositions = new Float32Array(particleCount * 3);
+const pSpeeds = new Float32Array(particleCount);
+for (let i = 0; i < particleCount; i++) {
+  pPositions[i * 3] = (Math.random() - 0.5) * 3.4;
+  pPositions[i * 3 + 1] = Math.random() * 2.6;
+  pPositions[i * 3 + 2] = (Math.random() - 0.5) * 2.8;
+  pSpeeds[i] = 0.4 + Math.random() * 0.9;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+const pMat = new THREE.PointsMaterial({ color: 0xff85c0, size: 0.055, transparent: true, opacity: 0.9 });
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
 // Original Omnia 3D Stage FX Props
 const fxRing = new THREE.Mesh(
   new THREE.TorusGeometry(0.65, 0.015, 16, 64),
@@ -38,6 +54,21 @@ const fxCrown = new THREE.Mesh(
 fxCrown.position.set(0, 1.72, 0);
 fxCrown.visible = false;
 scene.add(fxRing, fxCrown);
+
+// Illustrated SVG Stage Scenes (Renders full Cyber Tokyo Skyline, Sakura Shrine, Penthouse, etc.)
+function makeSceneSVG(type) {
+  const scenes = {
+    tokyo: `<svg xmlns="http://w3.org" viewBox="0 0 800 600"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#07031a"/><stop offset="55%" stop-color="#2e0854"/><stop offset="100%" stop-color="#ff1e8a"/></linearGradient></defs><rect width="800" height="600" fill="url(#g)"/><circle cx="620" cy="140" r="65" fill="#ff5ca8" opacity="0.35"/><rect x="40" y="210" width="90" height="390" fill="#0d0824"/><rect x="150" y="150" width="110" height="450" fill="#130b33"/><rect x="280" y="240" width="85" height="360" fill="#09051a"/><rect x="470" y="170" width="120" height="430" fill="#12092e"/><rect x="610" y="120" width="100" height="480" fill="#0b0621"/><rect x="720" y="220" width="80" height="380" fill="#160c38"/><g fill="#38bdf8" opacity="0.85"><rect x="170" y="180" width="12" height="22"/><rect x="200" y="180" width="12" height="22"/><rect x="170" y="220" width="12" height="22"/><rect x="630" y="150" width="14" height="26"/><rect x="665" y="150" width="14" height="26"/><rect x="630" y="200" width="14" height="26"/></g><g fill="#ff5ca8" opacity="0.9"><rect x="60" y="240" width="50" height="8"/><rect x="490" y="210" width="80" height="10"/><rect x="490" y="235" width="55" height="8"/></g></svg>`,
+    sakuraNight: `<svg xmlns="http://w3.org" viewBox="0 0 800 600"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#120724"/><stop offset="60%" stop-color="#4a1259"/><stop offset="100%" stop-color="#f472b6"/></linearGradient></defs><rect width="800" height="600" fill="url(#g)"/><circle cx="400" cy="180" r="95" fill="#fbcfe8" opacity="0.28"/><path d="M180 340 L620 340 L580 310 L220 310 Z" fill="#1f092b"/><rect x="250" y="340" width="24" height="260" fill="#1f092b"/><rect x="526" y="340" width="24" height="260" fill="#1f092b"/><rect x="210" y="385" width="380" height="18" fill="#1f092b"/><circle cx="110" cy="160" r="120" fill="#ff70a6" opacity="0.45"/><circle cx="690" cy="140" r="140" fill="#ff9ebb" opacity="0.4"/></svg>`,
+    penthouse: `<svg xmlns="http://w3.org" viewBox="0 0 800 600"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#09152b"/><stop offset="60%" stop-color="#1d4ed8"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient></defs><rect width="800" height="600" fill="url(#g)"/><line x1="0" y1="120" x2="800" y2="120" stroke="#7dd3fc" stroke-width="3" opacity="0.4"/><line x1="200" y1="0" x2="200" y2="600" stroke="#7dd3fc" stroke-width="3" opacity="0.3"/><line x1="600" y1="0" x2="600" y2="600" stroke="#7dd3fc" stroke-width="3" opacity="0.3"/><rect x="80" y="310" width="140" height="290" fill="#0f172a" opacity="0.8"/><rect x="560" y="270" width="160" height="330" fill="#0f172a" opacity="0.8"/><circle cx="640" cy="110" r="45" fill="#e0f2fe" opacity="0.35"/></svg>`,
+    lobby: `<svg xmlns="http://w3.org" viewBox="0 0 800 600"><defs><radialGradient id="g" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#312e81"/><stop offset="60%" stop-color="#111827"/><stop offset="100%" stop-color="#030712"/></radialGradient></defs><rect width="800" height="600" fill="url(#g)"/><polygon points="400,70 670,230 670,470 400,560 130,470 130,230" fill="none" stroke="#7c5cff" stroke-width="4" opacity="0.55"/><polygon points="400,120 620,250 620,440 400,515 180,440 180,250" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.45"/></svg>`,
+    galaxy: `<svg xmlns="http://w3.org" viewBox="0 0 800 600"><defs><radialGradient id="g" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#6b21a8"/><stop offset="45%" stop-color="#1e1b4b"/><stop offset="100%" stop-color="#020617"/></radialGradient></defs><rect width="800" height="600" fill="url(#g)"/><ellipse cx="420" cy="260" rx="340" ry="95" transform="rotate(-18 420 260)" fill="#c084fc" opacity="0.22"/><circle cx="140" cy="110" r="3" fill="#fff"/><circle cx="290" cy="80" r="4" fill="#38bdf8"/><circle cx="650" cy="130" r="3" fill="#fff"/><circle cx="540" cy="210" r="2.5" fill="#f472b6"/><circle cx="210" cy="290" r="3" fill="#fff"/></svg>`,
+    miami: `<svg xmlns="http://w3.org" viewBox="0 0 800 600"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0891b2"/><stop offset="50%" stop-color="#9333ea"/><stop offset="100%" stop-color="#f43f5e"/></linearGradient></defs><rect width="800" height="600" fill="url(#g)"/><circle cx="400" cy="290" r="130" fill="#fde047" opacity="0.75"/><rect x="0" y="340" width="800" height="260" fill="#1e1b4b" opacity="0.65"/></svg>`,
+    crimson: `<svg xmlns="http://w3.org" viewBox="0 0 800 600"><defs><radialGradient id="g" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#991b1b"/><stop offset="55%" stop-color="#450a0a"/><stop offset="100%" stop-color="#09090b"/></radialGradient></defs><rect width="800" height="600" fill="url(#g)"/><polygon points="100,600 220,160 270,600" fill="#18181b" opacity="0.7"/><polygon points="530,600 580,160 700,600" fill="#18181b" opacity="0.7"/></svg>`,
+    studio: `<svg xmlns="http://w3.org" viewBox="0 0 800 600"><defs><radialGradient id="g" cx="50%" cy="42%" r="65%"><stop offset="0%" stop-color="#cbd5e1"/><stop offset="60%" stop-color="#64748b"/><stop offset="100%" stop-color="#1e293b"/></radialGradient></defs><rect width="800" height="600" fill="url(#g)"/></svg>`
+  };
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(scenes[type] || scenes.lobby)}")`;
+}
 
 canvas.onmousedown = e => { isDragging = true; prevX = e.clientX; };
 window.onmouseup = () => isDragging = false;
@@ -75,175 +106,17 @@ document.getElementById('face-cam-btn').onclick = () => {
   status.innerText = 'Face Close-Up • Test Facial Expressions';
 };
 
-// 10 Custom Stage Backgrounds
-const stageBackgrounds = {
-  lobby:       { bg: 'radial-gradient(circle at 50% 35%, #253059 0%, #0b0d14 100%)', grid: 0x7c5cff },
-  tokyo:       { bg: 'linear-gradient(180deg, #090418 0%, #3b0764 52%, #ec4899 100%)', grid: 0xf472b6 },
-  penthouse:   { bg: 'linear-gradient(180deg, #0f172a 0%, #1e3a8a 55%, #38bdf8 100%)', grid: 0x38bdf8 },
-  galaxy:      { bg: 'radial-gradient(circle at 30% 20%, #581c87 0%, #1e1b4b 55%, #030712 100%)', grid: 0xc084fc },
-  studio:      { bg: 'radial-gradient(circle at 50% 40%, #94a3b8 0%, #334155 100%)', grid: 0xe2e8f0 },
-  sunset:      { bg: 'linear-gradient(180deg, #311042 0%, #be185d 48%, #f59e0b 100%)', grid: 0xfbbf24 },
-  sakuraNight: { bg: 'linear-gradient(180deg, #190a24 0%, #701a75 55%, #f9a8d4 100%)', grid: 0xf472b6 },
-  matrix:      { bg: 'radial-gradient(circle at 50% 35%, #064e3b 0%, #022c22 60%, #020617 100%)', grid: 0x10b981 },
-  crimson:     { bg: 'radial-gradient(circle at 50% 35%, #7f1d1d 0%, #450a0a 55%, #09090b 100%)', grid: 0xef4444 },
-  miami:       { bg: 'linear-gradient(180deg, #06b6d4 0%, #8b5cf6 52%, #f43f5e 100%)', grid: 0x22d3ee }
-};
-
+// Apply Illustrated Stage Backgrounds
+box.style.backgroundSize = 'cover';
+box.style.backgroundPosition = 'center';
 document.querySelectorAll('.bg-btns button').forEach(btn => {
   btn.onclick = () => {
-    const item = stageBackgrounds[btn.dataset.bg];
-    if (item) {
-      box.style.setProperty('background', item.bg, 'important');
-      grid.material.color.setHex(item.grid);
-      status.innerText = 'Background: ' + btn.innerText.trim();
-    }
+    const bgType = btn.dataset.bg;
+    box.style.setProperty('background-image', makeSceneSVG(bgType), 'important');
+    box.style.backgroundSize = 'cover';
+    status.innerText = 'Scene: ' + btn.innerText.trim();
   };
 });
 
-// Original Omnia Atmospheres
+// Atmospheres + Moving 3D Particles
 const atmospheres = {
-  eclipse:   { bg: 'radial-gradient(circle, #2a1215 0%, #07070c 100%)', key: 0xffb703, rim: 0xff2a5f, grid: 0xff2a5f },
-  sakura:    { bg: 'radial-gradient(circle, #381836 0%, #0d1326 100%)', key: 0xffb3d9, rim: 0x00f5d4, grid: 0xff70a6 },
-  biolume:   { bg: 'radial-gradient(circle, #092c38 0%, #040b14 100%)', key: 0x48cae4, rim: 0x00ff87, grid: 0x00b4d8 },
-  prism:     { bg: 'radial-gradient(circle, #2e224d 0%, #110d1f 100%)', key: 0xfff1d0, rim: 0xc77dff, grid: 0xe0aaff },
-  overdrive: { bg: 'radial-gradient(circle, #182617 0%, #050505 100%)', key: 0xd9ed92, rim: 0x70e000, grid: 0x9ef01a },
-  solaris:   { bg: 'radial-gradient(circle, #3d1e10 0%, #100c24 100%)', key: 0xff9e00, rim: 0x7209b7, grid: 0xf77f00 }
-};
-
-document.querySelectorAll('.light-btns button').forEach(btn => {
-  btn.onclick = () => {
-    const theme = atmospheres[btn.dataset.theme];
-    if (!theme) return;
-    box.style.setProperty('background', theme.bg, 'important');
-    light.color.setHex(theme.key);
-    rim.color.setHex(theme.rim);
-    grid.material.color.setHex(theme.grid);
-    status.innerText = 'Atmosphere: ' + btn.innerText.trim();
-  };
-});
-
-// 12 Facial Expressions Engine
-function applyFacialExpression(expr) {
-  currentFace = expr;
-  const keywords = {
-    joy:       ['joy', 'happy', 'smile'],
-    grin:      ['joy', 'happy', 'aa', 'laugh'],
-    sorrow:    ['sorrow', 'sad'],
-    cry:       ['sorrow', 'sad', 'cry', 'tear'],
-    angry:     ['angry', 'mad'],
-    furious:   ['angry', 'mad', 'aa', 'shout'],
-    surprised: ['surprised', 'oh', 'ou'],
-    shocked:   ['surprised', 'shock', 'aa'],
-    wink:      ['wink', 'fun'],
-    smug:      ['fun', 'smug', 'smile'],
-    sleepy:    ['blink', 'close', 'sleep']
-  };
-  faceMeshes.forEach(mesh => {
-    if (!mesh.morphTargetDictionary || !mesh.morphTargetInfluences) return;
-    Object.keys(mesh.morphTargetDictionary).forEach(key => {
-      const idx = mesh.morphTargetDictionary[key];
-      mesh.morphTargetInfluences[idx] = 0;
-      if (expr !== 'neutral' && keywords[expr]) {
-        const lower = key.toLowerCase();
-        if (keywords[expr].some(k => lower.includes(k))) {
-          mesh.morphTargetInfluences[idx] = 1.0;
-        }
-      }
-    });
-  });
-}
-
-document.querySelectorAll('.face-btns button').forEach(btn => {
-  btn.onclick = () => {
-    applyFacialExpression(btn.dataset.face);
-    status.innerText = 'Expression: ' + btn.innerText.trim();
-  };
-});
-
-document.querySelectorAll('[data-action]').forEach(btn => {
-  btn.onclick = () => {
-    currentAction = btn.dataset.action;
-    fxRing.visible = ['holo', 'domain', 'zerog', 'spinKick'].includes(currentAction);
-    fxCrown.visible = ['crown', 'arcade', 'royal'].includes(currentAction);
-    status.innerText = 'Active: ' + btn.innerText.trim();
-  };
-});
-
-document.querySelectorAll('.hand-btns button').forEach(btn => {
-  btn.onclick = () => {
-    currentHand = btn.dataset.hand;
-    status.innerText = 'Gesture: ' + btn.innerText.trim();
-  };
-});
-
-function findBone(namePart) {
-  return Object.values(bones).find(b => b.name.toLowerCase().includes(namePart.toLowerCase()));
-}
-
-function curlFinger(side, finger, amount) {
-  const sideTag = side === 'L' ? ['l_hand', 'left'] : ['r_hand', 'right'];
-  ['1', '2', '3'].forEach(seg => {
-    const b = Object.values(bones).find(bone => {
-      const n = bone.name.toLowerCase();
-      return sideTag.some(s => n.includes(s)) && n.includes(finger.toLowerCase()) && n.includes(seg);
-    });
-    if (b) {
-      b.rotation.z = side === 'L' ? amount : -amount;
-      b.rotation.x = amount * 0.45;
-    }
-  });
-}
-
-function applyHandPose(gesture) {
-  ['L', 'R'].forEach(side => {
-    ['Thumb', 'Index', 'Middle', 'Ring', 'Little'].forEach(f => curlFinger(side, f, 0.18));
-  });
-  if (gesture === 'peace') {
-    ['Ring', 'Little', 'Thumb'].forEach(f => curlFinger('R', f, 1.35));
-    ['Index', 'Middle'].forEach(f => curlFinger('R', f, 0));
-  } else if (gesture === 'kheart') {
-    ['Middle', 'Ring', 'Little'].forEach(f => curlFinger('R', f, 1.4));
-    curlFinger('R', 'Index', 0.65);
-    curlFinger('R', 'Thumb', 0.55);
-  } else if (gesture === 'rock') {
-    ['Middle', 'Ring', 'Thumb'].forEach(f => curlFinger('R', f, 1.35));
-    ['Index', 'Little'].forEach(f => curlFinger('R', f, 0));
-  } else if (gesture === 'omniaSign') {
-    ['L', 'R'].forEach(s => {
-      ['Middle', 'Ring', 'Little'].forEach(f => curlFinger(s, f, 1.3));
-      ['Index', 'Thumb'].forEach(f => curlFinger(s, f, 0.25));
-    });
-  } else if (gesture === 'rebel1' || gesture === 'rebel2') {
-    const sides = gesture === 'rebel2' ? ['L', 'R'] : ['R'];
-    sides.forEach(s => {
-      ['Index', 'Ring', 'Little', 'Thumb'].forEach(f => curlFinger(s, f, 1.45));
-      curlFinger(s, 'Middle', 0);
-    });
-  }
-}
-
-const loader = new GLTFLoader();
-function setupModel(gltf) {
-  if (vrmModel) scene.remove(vrmModel);
-  vrmModel = gltf.scene;
-  bones = {};
-  faceMeshes = [];
-  vrmModel.traverse(obj => {
-    if (obj.isBone) bones[obj.name] = obj;
-    if (obj.isMesh && obj.morphTargetDictionary) faceMeshes.push(obj);
-  });
-  baseY = vrmModel.position.y;
-  scene.add(vrmModel);
-  status.innerText = 'Niecee C Standing Still • Ready';
-}
-
-loader.load('./Niecee%20C.vrm', setupModel, undefined, () => {
-  status.innerText = '3D Grid Active • Click Choose File';
-});
-
-document.getElementById('file-picker').onchange = e => {
-  const file = e.target.files.item(0);
-  if (!file) return;
-  status.innerText = 'Loading ' + file.name + '...';
-  const reader = new FileReader();
-  reader.onload = ev => {
