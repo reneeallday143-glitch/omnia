@@ -45,10 +45,20 @@ function showAvatar(gltf, label) {
 }
 
 status.innerText = 'Loading Niecee C...';
-loader.load('/niecee.vrn', gltf => {
-  showAvatar(gltf, 'Niecee C');
-}, undefined, () => {
-  status.innerText = '3D Grid Active • Click Choose File';
+fetch('./niecee.vrm')
+  .then(res => {
+    if (!res.ok) throw new Error('File status ' + res.status);
+    return res.arrayBuffer();
+  })
+  .then(buf => {
+    loader.parse(buf, '', gltf => showAvatar(gltf, 'Niecee C'), err => {
+      status.innerText = 'Parse error: ' + err.message;
+    });
+  })
+  .catch(err => {
+    status.innerText = 'Load error: ' + err.message;
+  });
+
 });
 
 document.getElementById('file-picker').onchange = e => {
