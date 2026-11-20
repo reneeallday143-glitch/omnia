@@ -15,12 +15,85 @@
       <div class="stage" id="stage-box">
         <div class="badge" id="status">Loading Niecee C...</div>
         <canvas id="stage-canvas"></canvas>
-             <div class="controls">
-        <button id="spin-btn">Start Auto-Spin</button>
-        <button id="flip-btn">Flip 180°</button>
+                   <div class="controls" style="flex-wrap: wrap; justify-content: center; width: 92%;">
+        <button id="spin-btn">🧍 Stand Still (Paused)</button>
+        <button id="flip-btn">🔄 Flip 180°</button>
+        <button id="zoom-in-btn">🔍+ Zoom In</button>
+        <button id="zoom-out-btn">🔍- Zoom Out</button>
+        <button id="face-cam-btn">😊 Face Cam</button>
       </div>
     </div>
     <div class="panel" style="overflow-y: auto;">
+      <h2>Omnia Avatar Studio</h2>
+      <p>Upload your custom VRoid (.vrm) character:</p>
+      <input type="file" id="file-picker" accept=".vrm,.glb" class="upload-btn" />
+      <label>OMNIA USERNAME</label>
+      <input type="text" value="Niecee_C" />
+
+      <label>FACIAL EXPRESSIONS</label>
+      <div class="face-btns" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+        <button data-face="neutral">😐 Neutral</button>
+        <button data-face="joy">😄 Happy</button>
+        <button data-face="sorrow">😢 Sad</button>
+        <button data-face="angry">😡 Angry / Mad</button>
+        <button data-face="surprised">😲 Surprised</button>
+        <button data-face="fun">😏 Playful</button>
+      </div>
+
+      <label>SIGNATURE HAND GESTURES</label>
+      <div class="hand-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button data-hand="open">🖐️ Relaxed Hands</button>
+        <button data-hand="peace">✌️ Peace Sign</button>
+        <button data-hand="kheart">🫰 Korean Heart</button>
+        <button data-hand="rock">🤘 Rock On</button>
+        <button data-hand="omniaSign">💠 Omnia Prism Sign</button>
+        <button data-hand="rebel1">🖕 Middle Finger</button>
+        <button data-hand="rebel2">🖕🖕 Double Middle Finger</button>
+      </div>
+
+      <label>ORIGINAL OMNIA STANCES & FX</label>
+      <div class="stance-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button data-action="zerog">🌌 Zero-G Float</button>
+        <button data-action="holo">📡 Holo-Stream</button>
+        <button data-action="arcade">🏆 Arcade Win</button>
+        <button data-action="domain">🔮 Domain Seal</button>
+        <button data-action="dash">⚡ Cyber-Dash</button>
+        <button data-action="dj">🎧 Beat-Drop DJ</button>
+        <button data-action="star">✨ Star-Gazer</button>
+        <button data-action="crown">👑 Crown Summon</button>
+      </div>
+
+      <label>BODY MOVEMENTS & CREATOR ACTIONS</label>
+      <div class="move-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button data-action="idle">🧍 Stand Still (Idle)</button>
+        <button data-action="run">🏃 Neon Sprint</button>
+        <button data-action="jump">⬆️ Sky Leap</button>
+        <button data-action="clap">👏 Hype Clap</button>
+        <button data-action="wave">👋 Hero Wave</button>
+        <button data-action="spinKick">🌀 Vortex Spin</button>
+      </div>
+
+      <label>CUSTOM STAGE BACKGROUNDS</label>
+      <div class="bg-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button data-bg="lobby">🎮 Omnia Neon Lobby</button>
+        <button data-bg="tokyo">🌃 Cyber Tokyo Rooftop</button>
+        <button data-bg="penthouse">🏙️ Sky Lounge Penthouse</button>
+        <button data-bg="galaxy">🌌 Starlight Nebula</button>
+        <button data-bg="studio">📸 Clean Photo Studio</button>
+        <button data-bg="sunset">🌅 Golden Sunset Arena</button>
+      </div>
+
+      <label>ORIGINAL OMNIA ATMOSPHERES</label>
+      <div class="light-btns" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button data-theme="eclipse">🌑 Aether Eclipse</button>
+        <button data-theme="sakura">🌸 Sakura Glitch</button>
+        <button data-theme="biolume">🪼 Abyssal Biolume</button>
+        <button data-theme="prism">✨ Celestial Prism</button>
+        <button data-theme="overdrive">⚡ Void Overdrive</button>
+        <button data-theme="solaris">🌅 Solaris Mirage</button>
+      </div>
+    </div>
+
       <h2>Omnia Avatar Studio</h2>
       <p>Upload your custom VRoid (.vrm) character:</p>
       <input type="file" id="file-picker" accept=".vrm,.glb" class="upload-btn" />
