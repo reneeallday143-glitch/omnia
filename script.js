@@ -32,9 +32,29 @@ window.onmousemove = e => {
 document.getElementById('spin-btn').onclick = () => spin = !spin;
 document.getElementById('flip-btn').onclick = () => { if (vrmModel) vrmModel.rotation.y += Math.PI; };
 
+const atmospheres = {
+  eclipse:   { bg: 'radial-gradient(circle, #2a1215 0%, #07070c 100%)', key: 0xffb703, rim: 0xff2a5f, grid: 0xff2a5f },
+  sakura:    { bg: 'radial-gradient(circle, #381836 0%, #0d1326 100%)', key: 0xffb3d9, rim: 0x00f5d4, grid: 0xff70a6 },
+  biolume:   { bg: 'radial-gradient(circle, #092c38 0%, #040b14 100%)', key: 0x48cae4, rim: 0x00ff87, grid: 0x00b4d8 },
+  prism:     { bg: 'radial-gradient(circle, #2e224d 0%, #110d1f 100%)', key: 0xfff1d0, rim: 0xc77dff, grid: 0xe0aaff },
+  overdrive: { bg: 'radial-gradient(circle, #182617 0%, #050505 100%)', key: 0xd9ed92, rim: 0x70e000, grid: 0x9ef01a },
+  solaris:   { bg: 'radial-gradient(circle, #3d1e10 0%, #100c24 100%)', key: 0xff9e00, rim: 0x7209b7, grid: 0xf77f00 }
+};
+
 document.querySelectorAll('.light-btns button').forEach(btn => {
-  btn.onclick = () => rim.color.setHex(parseInt(btn.dataset.color));
+  btn.onclick = () => {
+    const theme = atmospheres[btn.dataset.theme];
+    if (!theme) return;
+    box.style.background = theme.bg;
+    light.color.setHex(theme.key);
+    rim.color.setHex(theme.rim);
+    scene.children.forEach(obj => {
+      if (obj.isGridHelper) obj.material.color.setHex(theme.grid);
+    });
+    status.innerText = 'Atmosphere: ' + btn.innerText.trim();
+  };
 });
+
 
 const stanceMap = {
   'Zero-G Float': 'zerog',
