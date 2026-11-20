@@ -1,5 +1,5 @@
 import * as THREE from "https://esm.sh/three";
-import { GLTFLoader } from "https://esm.sh//three/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "https://esm.sh/three/examples/jsm/loaders/GLTFLoader.js";
 
 const status = document.getElementById('status');
 const box = document.getElementById('stage-box');
@@ -44,34 +44,6 @@ function showAvatar(gltf, label) {
   status.innerText = label + ' Active • Drag to Rotate';
 }
 
-status.innerText = 'Loading Niecee C...';
-fetch('./niecee.vrm')
-  .then(res => {
-    if (!res.ok) throw new Error('File status ' + res.status);
-    return res.arrayBuffer();
-  })
-  .then(buf => {
-    loader.parse(buf, '', gltf => showAvatar(gltf, 'Niecee C'), err => {
-      status.innerText = 'Parse error: ' + err.message;
-    });
-  })
-  .catch(err => {
-    status.innerText = 'Load error: ' + err.message;
-  });
-
-});
-
-document.getElementById('file-picker').onchange = e => {
-  const file = e.target.files.item(0);
-  if (!file) return;
-  status.innerText = 'Loading ' + file.name + '...';
-  const reader = new FileReader();
-  reader.onload = ev => {
-    loader.parse(ev.target.result, '', gltf => showAvatar(gltf, file.name));
-  };
-  reader.readAsArrayBuffer(file);
-};
-
 function resizeStage() {
   const w = box.clientWidth || 500;
   const h = box.clientHeight || 400;
@@ -90,4 +62,29 @@ function animate() {
 setTimeout(() => {
   resizeStage();
   animate();
+  status.innerText = 'Fetching Niecee C...';
+  fetch('./niecee.vrm')
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.arrayBuffer();
+    })
+    .then(buf => {
+      loader.parse(buf, '', gltf => showAvatar(gltf, 'Niecee C'), err => {
+        status.innerText = 'Parse error: ' + err.message;
+      });
+    })
+    .catch(err => {
+      status.innerText = 'Load error: ' + err.message;
+    });
 }, 250);
+
+document.getElementById('file-picker').onchange = e => {
+  const file = e.target.files.item(0);
+  if (!file) return;
+  status.innerText = 'Loading ' + file.name + '...';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    loader.parse(ev.target.result, '', gltf => showAvatar(gltf, file.name));
+  };
+  reader.readAsArrayBuffer(file);
+};
