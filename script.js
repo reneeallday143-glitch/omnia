@@ -261,3 +261,82 @@ function animate() {
     const lArm = findBone('L_UpperArm'), rArm = findBone('R_UpperArm');
     const lFore = findBone('L_LowerArm'), rFore = findBone('R_LowerArm');
     const lLeg = findBone('L_UpperLeg'), rLeg = findBone('R_UpperLeg');
+    const lKnee = findBone('L_LowerLeg'), rKnee = findBone('R_LowerLeg');
+    const head = findBone('Head');
+
+    if (lArm && rArm) { lArm.rotation.set(0, 0, 1.15); rArm.rotation.set(0, 0, -1.15); }
+    if (lFore && rFore) { lFore.rotation.set(0, 0, 0); rFore.rotation.set(0, 0, 0); }
+    if (lLeg && rLeg) { lLeg.rotation.set(0, 0, 0); rLeg.rotation.set(0, 0, 0); }
+    if (lKnee && rKnee) { lKnee.rotation.set(0, 0, 0); rKnee.rotation.set(0, 0, 0); }
+    if (head) head.rotation.set(0, 0, 0);
+    vrmModel.position.y = baseY;
+    vrmModel.rotation.z = 0;
+
+    if (currentAction === 'idle') {
+      vrmModel.position.y = baseY + Math.sin(t * 2) * 0.008;
+    } else if (currentAction === 'zerog') {
+      vrmModel.position.y = baseY + 0.14 + Math.sin(t * 2.2) * 0.06;
+      if (lArm && rArm) { lArm.rotation.set(0.2, 0, 0.75 + Math.sin(t * 2) * 0.15); rArm.rotation.set(0.2, 0, -0.75 - Math.sin(t * 2) * 0.15); }
+      if (lKnee && rKnee) { lKnee.rotation.x = 0.35; rKnee.rotation.x = 0.2; }
+    } else if (currentAction === 'holo') {
+      if (rArm && rFore) { rArm.rotation.set(-0.85, -0.3, -0.4); rFore.rotation.set(0, -1.1, -0.3); }
+      if (lArm) lArm.rotation.set(0.2, 0, 1.0);
+    } else if (currentAction === 'arcade') {
+      vrmModel.position.y = baseY + Math.abs(Math.sin(t * 5)) * 0.12;
+      if (lArm && rArm) { lArm.rotation.set(-0.3, 0, -0.35); rArm.rotation.set(-0.3, 0, 0.35); }
+      if (lFore && rFore) { lFore.rotation.z = 0.4; rFore.rotation.z = -0.4; }
+    } else if (currentAction === 'domain') {
+      if (lArm && rArm) { lArm.rotation.set(-0.8, 0.45, 0.55); rArm.rotation.set(-0.8, -0.45, -0.55); }
+      if (lFore && rFore) { lFore.rotation.y = 1.1; rFore.rotation.y = -1.1; }
+    } else if (currentAction === 'dash') {
+      vrmModel.rotation.z = -0.14;
+      if (lArm && rArm) { lArm.rotation.set(0.75, 0, 0.9); rArm.rotation.set(0.75, 0, -0.9); }
+      if (lLeg && rLeg) { lLeg.rotation.x = -0.35; rLeg.rotation.x = 0.45; }
+    } else if (currentAction === 'dj') {
+      vrmModel.position.y = baseY + Math.abs(Math.sin(t * 8)) * 0.04;
+      if (rArm && rFore) { rArm.rotation.set(-0.5, 0, -0.4); rFore.rotation.set(0, -1.3, -0.6); }
+      if (lArm && lFore) { lArm.rotation.set(-0.6, 0.2, 0.7); lFore.rotation.y = 0.8 + Math.sin(t * 8) * 0.3; }
+    } else if (currentAction === 'star') {
+      if (head) head.rotation.x = -0.35;
+      if (lArm && rArm) { lArm.rotation.set(0.3, 0, 1.25); rArm.rotation.set(0.3, 0, -1.25); }
+    } else if (currentAction === 'crown') {
+      if (rArm && rFore) { rArm.rotation.set(-0.4, 0, 0.25); rFore.rotation.set(0, -0.4, -0.3); }
+    } else if (currentAction === 'run') {
+      const s = Math.sin(t * 9);
+      vrmModel.position.y = baseY + Math.abs(Math.cos(t * 9)) * 0.06;
+      if (lLeg && rLeg) { lLeg.rotation.x = s * 0.75; rLeg.rotation.x = -s * 0.75; }
+      if (lKnee && rKnee) { lKnee.rotation.x = Math.max(0, -s) * 0.9; rKnee.rotation.x = Math.max(0, s) * 0.9; }
+      if (lArm && rArm) { lArm.rotation.x = -s * 0.7; rArm.rotation.x = s * 0.7; }
+    } else if (currentAction === 'jump') {
+      const j = Math.max(0, Math.sin(t * 4));
+      vrmModel.position.y = baseY + j * 0.35;
+      if (lArm && rArm) { lArm.rotation.z = 1.15 - j * 1.4; rArm.rotation.z = -1.15 + j * 1.4; }
+    } else if (currentAction === 'clap') {
+      const c = Math.abs(Math.sin(t * 8)) * 0.35;
+      if (lArm && rArm) { lArm.rotation.set(-0.7, 0.5 - c, 0.5); rArm.rotation.set(-0.7, -0.5 + c, -0.5); }
+      if (lFore && rFore) { lFore.rotation.y = 0.8; rFore.rotation.y = -0.8; }
+    } else if (currentAction === 'wave') {
+      if (rArm && rFore) { rArm.rotation.z = -0.35; rFore.rotation.z = -0.5 + Math.sin(t * 7) * 0.35; }
+    } else if (currentAction === 'spinKick') {
+      vrmModel.rotation.y += 0.09;
+      if (rLeg) rLeg.rotation.set(0, 0, -0.85);
+      if (lArm && rArm) { lArm.rotation.z = 0.5; rArm.rotation.z = -0.5; }
+    }
+
+    if (currentHand !== 'open' && rArm && rFore) {
+      rArm.rotation.set(-0.65, -0.2, -0.45);
+      rFore.rotation.set(0, -0.7, -0.4);
+      if ((currentHand === 'rebel2' || currentHand === 'omniaSign') && lArm && lFore) {
+        lArm.rotation.set(-0.65, 0.2, 0.45);
+        lFore.rotation.set(0, 0.7, 0.4);
+      }
+    }
+    applyHandPose(currentHand);
+  }
+  renderer.render(scene, camera);
+}
+
+setTimeout(() => {
+  resizeStage();
+  animate();
+}, 250);
