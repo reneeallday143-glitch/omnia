@@ -1,0 +1,16 @@
+body { margin: 0; background: #0b0d14; color: #f3f4f6; font-family: sans-serif; }
+.omnia-app { display: flex; flex-direction: column; height: 100vh; }
+header { background: #141824; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #262d42; }
+.brand { font-size: 20px; font-weight: 800; letter-spacing: 2px; }
+.brand span { font-size: 11px; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 3px 8px; border-radius: 99px; }
+.coins { color: #fbbf24; font-weight: 700; }
+.main { flex: 1; display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; padding: 20px; }
+.stage { background: radial-gradient(circle, #1e2640 0%, #0b0d14 100%); border: 2px solid #323d5e; border-radius: 16px; position: relative; overflow: hidden; min-height: 360px; }
+#stage-canvas { width: 100%; height: 100%; display: block; }
+.badge { position: absolute; top: 14px; left: 14px; background: rgba(11,13,20,0.9); border: 1px solid #38bdf8; color: #38bdf8; padding: 6px 12px; border-radius: 8px; font-size: 12px; }
+.controls { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+button { background: #1d2335; border: 1px solid #475569; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.panel { background: #141824; border: 1px solid #262d42; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.upload-btn { background: linear-gradient(135deg, #7c5cff, #ff5ca8); border: none; padding: 14px; font-size: 15px; border-radius: 8px; color: #fff; }
+input { background: #0b0d14; border: 1px solid #2c3550; color: #fff; padding: 10px; border-radius: 8px; }
+.light-btns { display: flex; gap: 8px; }
