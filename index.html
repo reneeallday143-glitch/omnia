@@ -1,45 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-
-  <head>
-    <meta charset="UTF-8">
-    <title>OMNIA</title>
-    <title>OMNIA - 3D Anime World</title><link rel="stylesheet" href="./style.css">
-
-  </head>
-    
-  <body>
+<head>
+  <meta charset="UTF-8" />
+  <title>OMNIA — 3D Anime World</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
   <div class="omnia-app">
-  <header>
-    <div class="brand">OMNIA <span>3D ANIME</span></div>
-    <div class="coins">✦ 250 Coins</div>
-  </header>
-  <div class="main">
-    <div class="stage" id="stage-box">
-      <div class="badge" id="status">3D Grid Active • Click Choose File</div>
-      <canvas id="stage-canvas"></canvas>
-      <div class="controls">
-        <button id="spin-btn">Auto-Spin</button>
-        <button id="flip-btn">Flip 180°</button>
+    <header>
+      <div class="brand">OMNIA <span>3D ANIME</span></div>
+      <div class="coins">✦ 250 Coins</div>
+    </header>
+    <div class="main">
+      <div class="stage" id="stage-box">
+        <div class="badge" id="status">Loading Niecee C...</div>
+        <canvas id="stage-canvas"></canvas>
+        <div class="controls">
+          <button id="spin-btn">Auto-Spin</button>
+          <button id="flip-btn">Flip 180°</button>
+        </div>
       </div>
-    </div>
-    <div class="panel">
-      <h2>Japanese 3D Anime Loader</h2>
-      <p>Upload your custom VRoid (.vrm) character:</p>
-      <input type="file" id="file-picker" accept=".vrm,.glb" class="upload-btn" />
-      <label>OMNIA USERNAME</label>
-      <input type="text" value="Niecee_C" />
-      <label>STAGE LIGHTING</label>
-      <div class="light-btns">
-        <button data-color="0x7c5cff">Violet</button>
-        <button data-color="0x38bdf8">Cyber Blue</button>
-        <button data-color="0xff5ca8">Neon Pink</button>
+      <div class="panel">
+        <h2>Japanese 3D Anime Loader</h2>
+        <p>Upload your custom VRoid (.vrm) character:</p>
+        <input type="file" id="file-picker" accept=".vrm,.glb" class="upload-btn" />
+        <label>OMNIA USERNAME</label>
+        <input type="text" value="Niecee_C" />
+        <label>CHARACTER POSE &amp; EMOTE</label>
+        <div class="pose-btns">
+          <button data-pose="relaxed">Relaxed</button>
+          <button data-pose="wave">Wave 👋</button>
+          <button data-pose="cheer">Cheer ✨</button>
+        </div>
+        <label>STAGE LIGHTING</label>
+        <div class="light-btns">
+          <button data-color="0x7c5cff">Violet</button>
+          <button data-color="0x38bdf8">Cyber Blue</button>
+          <button data-color="0xff5ca8">Neon Pink</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-    <script type="module" src="./script.js"></script>
-
-  </body>
-  
+  <script type="module" src="./script.js"></script>
+</body>
 </html>
