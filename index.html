@@ -2,15 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>VRM Full Arm, Hand & Finger Sign Studio</title>
+  <title>VRM Studio — Full Poses, Gestures & FX</title>
   <style>
-    body { margin: 0; overflow: hidden; background: #12141a; font-family: system-ui, sans-serif; color: #fff; }
-    #ui { position: fixed; top: 14px; left: 14px; z-index: 10; display: flex; flex-direction: column; gap: 10px; max-width: 95vw; }
-    .panel { background: rgba(20, 24, 34, 0.85); backdrop-filter: blur(10px); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-    .chip { background: #262c3d; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); padding: 6px 11px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.15s; }
-    .chip:hover { background: #363f57; }
-    .chip.active { background: #6366f1; color: #fff; border-color: #818cf8; font-weight: 600; }
-    input[type="file"] { font-size: 12px; color: #cbd5e1; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #14151f;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* LEFT 3D STAGE */
+    #stage-wrap {
+      position: relative;
+      flex: 1;
+      height: 100vh;
+      background: radial-gradient(circle at 50% 45%, #232138 0%, #141522 100%);
+      overflow: hidden;
+    }
+    #stage-canvas { width: 100%; height: 100%; display: block; }
+
+    #top-loader {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 10;
+      background: rgba(18, 20, 30, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #top-loader input { font-size: 11px; color: #cbd5e1; }
+
+    #bottom-controls {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 6px;
+      background: rgba(16, 18, 28, 0.88);
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+    .ctrl-btn {
+      background: #232638;
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .ctrl-btn:hover { background: #323650; }
+    .ctrl-btn.active { background: #4f46e5; border-color: #818cf8; color: #fff; }
+
+    /* RIGHT SIDEBAR */
+    #sidebar {
+      width: 470px;
+      height: 100vh;
+      background: #11131c;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      overflow-y: auto;
+      padding: 12px 14px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    #sidebar::-webkit-scrollbar { width: 6px; }
+    #sidebar::-webkit-scrollbar-thumb { background: #2d3248; border-radius: 3px; }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #8b93b0;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+
+    .pose-btn {
+      background: #1b1e2e;
+      color: #d8deef;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 6px;
+      padding: 7px 8px;
+      font-size: 11.5px;
+      cursor: pointer;
+      text-align: center;
+      transition: 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pose-btn:hover { background: #272c42; border-color: rgba(255, 255, 255, 0.22); }
+    .pose-btn.active {
+      background: #2b3254;
+      border-color: #6366f1;
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 0 0 1px #6366f1 inset;
+    }
   </style>
   <script type="importmap">
   {
@@ -23,28 +129,120 @@
   </script>
 </head>
 <body>
-  <div id="ui">
-    <div class="panel">
-      <label><strong>Load VRM:</strong> <input type="file" id="vrm-file" accept=".vrm" /></label>
-      <span id="status" style="font-size:12px;color:#94a3b8;">Upload a .vrm character to start</span>
+
+  <!-- LEFT 3D VIEWPORT -->
+  <div id="stage-wrap">
+    <div id="top-loader">
+      <strong>VRM:</strong>
+      <input type="file" id="vrm-file" accept=".vrm" />
+      <span id="status" style="color:#94a3b8;">Upload your .vrm character</span>
     </div>
-    <div class="panel" id="hand-bar">
-      <button class="chip active" onclick="setHand('relaxed', this)">🫳 Relaxed</button>
-      <button class="chip" onclick="setHand('crossedArms', this)">🙅 Crossed Arms</button>
-      <button class="chip" onclick="setHand('open', this)">✋ Open</button>
-      <button class="chip" onclick="setHand('peace', this)">✌️ Peace</button>
-      <button class="chip" onclick="setHand('kheart', this)">🫰 Finger Heart</button>
-      <button class="chip" onclick="setHand('westside', this)">🇼 West Coast</button>
-      <button class="chip" onclick="setHand('vulcan', this)">🖖 Vulcan</button>
-      <button class="chip" onclick="setHand('shaka', this)">🤙 Shaka</button>
-      <button class="chip" onclick="setHand('rock', this)">🤘 Horns</button>
-      <button class="chip" onclick="setHand('bird', this)">🖕 Single</button>
-      <button class="chip" onclick="setHand('rebel2', this)">🖕🖕 Double</button>
-      <button class="chip" onclick="setHand('omniaSign', this)">🔺 Omnia Prism</button>
-      <button class="chip" onclick="setHand('worldFlex', this)">👑 World Flex</button>
-      <button class="chip" id="crown-btn" onclick="toggleCrown()">✨ Crown: ON</button>
+
+    <div id="bottom-controls">
+      <button class="ctrl-btn" id="pause-btn" onclick="togglePause()">⏸ Stand Still (Playing)</button>
+      <button class="ctrl-btn" onclick="flipModel()">🔄 Flip 180°</button>
+      <button class="ctrl-btn" onclick="zoomCam(-0.28)">➕ Zoom In</button>
+      <button class="ctrl-btn" onclick="zoomCam(0.28)">➖ Zoom Out</button>
+      <button class="ctrl-btn" onclick="faceCam()">😊 Face Cam</button>
     </div>
   </div>
-  <script type="module" src="./script.js"></script>
-</body>
-</html>
+
+  <!-- RIGHT STUDIO SIDEBAR -->
+  <div id="sidebar">
+    <div>
+      <div class="section-title">ALL FACIAL EXPRESSIONS (12)</div>
+      <div class="grid-3" id="expr-grid">
+        <button class="pose-btn active" onclick="setExpr('neutral', this)">😐 Neutral</button>
+        <button class="pose-btn" onclick="setExpr('happy', this)">😄 Happy</button>
+        <button class="pose-btn" onclick="setExpr('oh', this)">😮 Big Grin</button>
+        <button class="pose-btn" onclick="setExpr('sad', this)">😢 Sad</button>
+        <button class="pose-btn" onclick="setExpr('sorrow', this)">😭 Crying</button>
+        <button class="pose-btn" onclick="setExpr('angry', this)">😠 Angry</button>
+        <button class="pose-btn" onclick="setExpr('furious', this)">😡 Furious</button>
+        <button class="pose-btn" onclick="setExpr('surprised', this)">😲 Surprised</button>
+        <button class="pose-btn" onclick="setExpr('shocked', this)">😱 Shocked</button>
+        <button class="pose-btn" onclick="setExpr('wink', this)">😉 Wink</button>
+        <button class="pose-btn" onclick="setExpr('smug', this)">😏 Smug</button>
+        <button class="pose-btn" onclick="setExpr('relaxed', this)">😴 Sleepy</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">SIGNATURE HAND GESTURES (FINGERS + HANDS + ARMS)</div>
+      <div class="grid-2" id="hand-grid">
+        <button class="pose-btn active" onclick="setHand('relaxed', this)">🫳 Relaxed Hands</button>
+        <button class="pose-btn" onclick="setHand('peace', this)">✌️ Peace Sign</button>
+        <button class="pose-btn" onclick="setHand('kheart', this)">🫰 Korean Heart</button>
+        <button class="pose-btn" onclick="setHand('rock', this)">🤘 Rock On</button>
+        <button class="pose-btn" onclick="setHand('omniaSign', this)">🔺 Omnia Prism Sign</button>
+        <button class="pose-btn" onclick="setHand('bird', this)">🖕 Middle Finger</button>
+        <button class="pose-btn" onclick="setHand('rebel2', this)">🖕🖕 Double Middle Finger</button>
+        <button class="pose-btn" onclick="setHand('westside', this)">🇼 West Coast W</button>
+        <button class="pose-btn" onclick="setHand('vulcan', this)">🖖 Vulcan Salute</button>
+        <button class="pose-btn" onclick="setHand('shaka', this)">🤙 Shaka / Hang Loose</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">CREATOR ATTITUDE POSES</div>
+      <div class="grid-2" id="attitude-grid">
+        <button class="pose-btn" onclick="setHand('relaxed', this)">🧍 Arms Down (Idle)</button>
+        <button class="pose-btn" onclick="setHand('hips', this)">💁 Hands on Hips</button>
+        <button class="pose-btn" onclick="setHand('crossedArms', this)">🙅 Arms Folded</button>
+        <button class="pose-btn" onclick="setHand('gangster', this)">😎 Gangster Lean</button>
+        <button class="pose-btn" onclick="setHand('worldFlex', this)">👑 Royal Flex (Crown)</button>
+        <button class="pose-btn" onclick="setHand('wave', this)">👋 Hero Wave</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">ORIGINAL OMNIA STANCES & FX</div>
+      <div class="grid-2" id="omnia-grid">
+        <button class="pose-btn" onclick="setStance('float', this)">✨ Zero-G Float</button>
+        <button class="pose-btn" onclick="setStance('holo', this)">💠 Holo-Stream</button>
+        <button class="pose-btn" onclick="setStance('arcade', this)">🕹️ Arcade Win</button>
+        <button class="pose-btn" onclick="setStance('domain', this)">🌌 Domain Seal</button>
+        <button class="pose-btn" onclick="setStance('none', this)">⏹ Normal Ground</button>
+        <button class="pose-btn" id="crown-toggle" onclick="toggleCrown()">👑 Toggle Crown: ON</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">CUSTOM STAGE BACKGROUNDS</div>
+      <div class="grid-2" id="bg-grid">
+        <button class="pose-btn active" onclick="setBg('sakura', this)">🌸 Sakura Twilight</button>
+        <button class="pose-btn" onclick="setBg('cyber', this)">🌃 Cyber Tokyo Rooftop</button>
+        <button class="pose-btn" onclick="setBg('crimson', this)">🔥 Crimson Boss Arena</button>
+        <button class="pose-btn" onclick="setBg('studio', this)">📸 Clean Photo Studio</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">ATMOSPHERES & MOVING 3D PARTICLES</div>
+      <div class="grid-2" id="fx-grid">
+        <button class="pose-btn active" onclick="setFx('petals', this)">🌸 Sakura Glitch (Petals)</button>
+        <button class="pose-btn" onclick="setFx('embers', this)">🔥 Aether Eclipse (Embers)</button>
+        <button class="pose-btn" onclick="setFx('sparks', this)">✨ Celestial Prism (Sparks)</button>
+        <button class="pose-btn" onclick="setFx('off', this)">🚫 Particles Off</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+
+    const stageWrap = document.getElementById('stage-wrap');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(30, stageWrap.clientWidth / stageWrap.clientHeight, 0.05, 30);
+    camera.position.set(0, 1.15, 2.35);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(stageWrap.clientWidth, stageWrap.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.domElement.id = 'stage-canvas';
+    stageWrap.appendChild(renderer.domElement);
+
