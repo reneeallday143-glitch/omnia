@@ -63,7 +63,7 @@ setTimeout(() => {
   resizeStage();
   animate();
   status.innerText = 'Fetching Niecee C...';
-  fetch('./niecee.vrm')
+  fetch('./Niecee%20C.vrm')
     .then(res => {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.arrayBuffer();
