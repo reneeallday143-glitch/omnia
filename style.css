@@ -14,3 +14,13 @@ button { background: #1d2335; border: 1px solid #475569; color: #fff; padding: 8
 .upload-btn { background: linear-gradient(135deg, #7c5cff, #ff5ca8); border: none; padding: 14px; font-size: 15px; border-radius: 8px; color: #fff; }
 input { background: #0b0d14; border: 1px solid #2c3550; color: #fff; padding: 10px; border-radius: 8px; }
 .light-btns { display: flex; gap: 8px; }
+button {
+  transition: all 0.18s ease;
+  border: 1px solid rgba(124, 92, 255, 0.35);
+}
+button:hover {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(124, 92, 255, 0.85), 0 0 24px rgba(56, 189, 248, 0.55) !important;
+  transform: translateY(-2px);
+  background: rgba(124, 92, 255, 0.25) !important;
+}
