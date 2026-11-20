@@ -45,7 +45,7 @@ function showAvatar(gltf, label) {
 }
 
 status.innerText = 'Loading Niecee C...';
-loader.load('./Niecee%20C.vrm', gltf => {
+loader.load('/niecee.vrn', gltf => {
   showAvatar(gltf, 'Niecee C');
 }, undefined, () => {
   status.innerText = '3D Grid Active • Click Choose File';
