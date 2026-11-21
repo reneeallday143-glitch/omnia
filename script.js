@@ -123,7 +123,6 @@ loader.load('./Niecee%20C.vrm', (gltf) => {
   const vrm = gltf.userData.vrm;
   if (!vrm) { console.error('No VRM found in gltf'); return; }
   VRMUtils.removeUnnecessaryVertices(gltf.scene);
-  VRMUtils.combineSkeletons(gltf.scene);
   vrm.scene.rotation.y = Math.PI;
   scene.add(vrm.scene);
   currentVrm = vrm;
