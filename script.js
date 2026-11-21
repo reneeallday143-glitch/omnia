@@ -450,9 +450,11 @@ function setFingerTarget(side, finger, curl, spread = 0, t = 0, motionAmp = 0.06
   const s = spread + splayWave;
 
   if (finger === 'Thumb') {
-    setTarget(`${side}ThumbProximal`, 0.18 * c, dir * s, dir * (c * 0.45));
-    setTarget(`${side}ThumbMetacarpal`, 0.10 * c, 0, dir * (c * 0.55));
-    setTarget(`${side}ThumbDistal`, 0.05 * c, 0, dir * (c * 0.50));
+    // Human thumb fold = opposition: the metacarpal swings the thumb ACROSS the palm (Y axis).
+    // The old recipe folded on Z only, which measured FARTHER from the palm than rest — thumb stuck out.
+    setTarget(`${side}ThumbProximal`, 0.46 * c, dir * s, dir * (c * 0.31));
+    setTarget(`${side}ThumbMetacarpal`, -0.23 * c, dir * (c * 0.62), dir * (c * 0.31));
+    setTarget(`${side}ThumbDistal`, 0.08 * c, 0, dir * (c * 0.38));
   } else {
     setTarget(`${side}${finger}Proximal`, 0, dir * s, dir * (c * 0.92));
     setTarget(`${side}${finger}Intermediate`, 0, 0, dir * (c * 0.95));
@@ -466,17 +468,17 @@ function poseFingers(side, curls, spreads, t, amp = 0.012) {
 }
 
 function updateTargets(t) {
-  const breathe = Math.sin(t * 1.9) * 0.045;
-  const armSway = Math.cos(t * 1.5) * 0.04;
+  const breathe = (Math.sin(t * 1.9) * 0.65 + Math.sin(t * 1.31 + 1.7) * 0.35) * 0.045;
+  const armSway = (Math.cos(t * 1.5) * 0.6 + Math.cos(t * 1.13 + 0.6) * 0.4) * 0.04;
   const wristRock = Math.sin(t * 2.4) * 0.08;
 
   ['Left', 'Right'].forEach(side => {
     const dir = side === 'Left' ? 1 : -1;
     setFingerTarget(side, 'Thumb', 0.14, -0.10, t, 0.03);
-    setFingerTarget(side, 'Index', 0.02, -0.03, t, 0.03);
-    setFingerTarget(side, 'Middle', 0.03, 0.00, t, 0.03);
-    setFingerTarget(side, 'Ring', 0.05, 0.03, t, 0.03);
-    setFingerTarget(side, 'Little', 0.06, 0.06, t, 0.03);
+    setFingerTarget(side, 'Index', -0.17, -0.03, t, 0.03);
+    setFingerTarget(side, 'Middle', -0.16, 0.00, t, 0.03);
+    setFingerTarget(side, 'Ring', -0.15, 0.03, t, 0.03);
+    setFingerTarget(side, 'Little', -0.14, 0.06, t, 0.03);
 
     setTarget(`${side}Shoulder`, 0, 0, dir * (0.04 + breathe * 0.4));
     setTarget(`${side}UpperArm`, 0.06 + breathe, armSway, dir * (-1.18 + breathe));
@@ -560,8 +562,8 @@ function updateTargets(t) {
     setTarget('RightUpperArm', 0.06 + breathe, 0, 1.16);
     setTarget('LeftLowerArm', 0, 0.24, -0.18);
     setTarget('RightLowerArm', 0, -0.24, 0.18);
-    poseFingers('Left', [0.14, 0.02, 0.03, 0.05, 0.06], [-0.14, -0.03, 0, 0.03, 0.06], t);
-    poseFingers('Right', [0.14, 0.02, 0.03, 0.05, 0.06], [-0.14, -0.03, 0, 0.03, 0.06], t);
+    poseFingers('Left', [0.14, -0.17, -0.16, -0.15, -0.14], [-0.14, -0.03, 0, 0.03, 0.06], t);
+    poseFingers('Right', [0.14, -0.17, -0.16, -0.15, -0.14], [-0.14, -0.03, 0, 0.03, 0.06], t);
   } else if (currentStance === 'domain') {
     // Domain seal: forearms crossed in front of her chest, fingers curled into the seal
     ['Left', 'Right'].forEach(side => {
@@ -602,8 +604,8 @@ function updateTargets(t) {
     setTarget('RightUpperLeg', -0.06 + w * 0.08, 0, -0.05 + w * 0.05);
     setTarget('LeftLowerLeg', 0.14 + Math.max(0, w) * 0.22, 0, 0);
     setTarget('RightLowerLeg', 0.14 + Math.max(0, -w) * 0.22, 0, 0);
-    poseFingers('Left', [0.45, -0.10, -0.10, -0.10, -0.10], [-0.25, -0.20, -0.08, 0.12, 0.25], t);
-    poseFingers('Right', [0.45, -0.10, -0.10, -0.10, -0.10], [-0.25, -0.20, -0.08, 0.12, 0.25], t);
+    poseFingers('Left', [0.45, -0.20, -0.20, -0.20, -0.20], [-0.25, -0.20, -0.08, 0.12, 0.25], t);
+    poseFingers('Right', [0.45, -0.20, -0.20, -0.20, -0.20], [-0.25, -0.20, -0.08, 0.12, 0.25], t);
   } else if (currentStance === 'powerup') {
     // Power-up charge: squats low, fists clenched at her sides, body trembling with energy
     const shake = Math.sin(t * 42) * 0.012;
@@ -629,8 +631,8 @@ function updateTargets(t) {
     setTarget('LeftLowerArm', 0, -0.15, -0.10);
     setTarget('Head', 0.38, -0.25, 0.20);
     setTarget('Spine', 0.10, 0, 0.06);
-    poseFingers('Right', [0.60, -0.08, -0.08, -0.08, -0.08], [0, -0.10, 0, 0, 0.10], t);
-    poseFingers('Left', [0.60, -0.08, -0.08, -0.08, -0.08], [0, -0.10, 0, 0, 0.10], t);
+    poseFingers('Right', [0.60, -0.20, -0.20, -0.20, -0.20], [0, -0.10, 0, 0, 0.10], t);
+    poseFingers('Left', [0.60, -0.20, -0.20, -0.20, -0.20], [0, -0.10, 0, 0, 0.10], t);
   } else if (currentStance === 'airguitar') {
     // Air guitar: legs planted wide, one hand on the neck, the other strumming wild
     const strum = Math.sin(t * 9.0);
@@ -643,7 +645,7 @@ function updateTargets(t) {
     setTarget('RightUpperArm', -0.25, -0.30, 0.85);
     setTarget('RightLowerArm', 0, 1.30 + strum * 0.38, 0.55);
     poseFingers('Left', [0.85, 0.55, 0.65, 0.75, 0.85], [0, 0, 0, 0, 0], t);
-    poseFingers('Right', [0.80, 0.18, 0.22, 0.26, 0.30], [0, 0, 0, 0, 0], t);
+    poseFingers('Right', [0.70, -0.05, 0.00, 0.05, 0.10], [0, 0, 0, 0, 0], t);
   } else if (currentStance === 'blowkiss') {
     // Blow a kiss: her hand floats to her lips, then opens toward you as she blows
     const k = (Math.sin(t * 1.7) + 1) / 2;
@@ -651,7 +653,7 @@ function updateTargets(t) {
     setTarget('RightUpperArm', -0.55 - k * 0.25, -0.10, 0.55 - k * 0.25);
     setTarget('RightLowerArm', 0, 2.35 - k * 1.20, 0.50 - k * 0.30);
     setTarget('RightHand', 0, 0.40, 0);
-    poseFingers('Right', [0.85 - k * 0.95, 0.70 - k * 0.80, 0.90 - k * 1.00, 1.00 - k * 1.10, 1.10 - k * 1.20], [-0.15, 0.10, 0, 0, 0.10], t);
+    poseFingers('Right', [0.85 - k * 1.07, 0.70 - k * 0.92, 0.90 - k * 1.12, 1.00 - k * 1.22, 1.10 - k * 1.32], [-0.15, 0.10, 0, 0, 0.10], t);
     setTarget('LeftUpperArm', 0.06, 0, -1.18);
     setTarget('LeftLowerArm', 0, 0.24, -0.18);
   } else if (currentStance === 'moonwalk') {
@@ -671,7 +673,7 @@ function updateTargets(t) {
 
   const g = currentHand;
   if (g === 'crossedArms') {
-    ['Thumb', 'Index', 'Middle', 'Ring', 'Little'].forEach((f, i) => setFingerTarget('Left', f, 0.12 + i * 0.02, 0, t, 0.04));
+    ['Thumb', 'Index', 'Middle', 'Ring', 'Little'].forEach((f, i) => setFingerTarget('Left', f, -0.08 + i * 0.01, 0, t, 0.04));
     setTarget('LeftShoulder', 0.06, 0.14, 0.06 + breathe * 0.3);
     setTarget('LeftUpperArm', -0.15 + breathe * 0.5, -0.60, -0.50);
     setTarget('LeftLowerArm', 0, -1.85, -1.05);
@@ -682,22 +684,22 @@ function updateTargets(t) {
     const tap3 = Math.sin(t * 3.2 - 1.0) * 0.11;
     const tap4 = Math.sin(t * 3.2 - 1.5) * 0.12;
     setFingerTarget('Right', 'Thumb', 0.22, -0.22, t, 0.04);
-    setFingerTarget('Right', 'Index', 0.16 + tap1, 0.12, t, 0.05);
-    setFingerTarget('Right', 'Middle', 0.20 + tap2, 0.04, t, 0.05);
-    setFingerTarget('Right', 'Ring', 0.24 + tap3, -0.04, t, 0.05);
-    setFingerTarget('Right', 'Little', 0.28 + tap4, -0.12, t, 0.05);
+    setFingerTarget('Right', 'Index', 0.00 + tap1, 0.12, t, 0.05);
+    setFingerTarget('Right', 'Middle', 0.02 + tap2, 0.04, t, 0.05);
+    setFingerTarget('Right', 'Ring', 0.04 + tap3, -0.04, t, 0.05);
+    setFingerTarget('Right', 'Little', 0.06 + tap4, -0.12, t, 0.05);
 
     setTarget('RightShoulder', 0.08, -0.16, -0.08 - breathe * 0.3);
     setTarget('RightUpperArm', -0.15 + breathe * 0.6, 0.60, 0.50);
     setTarget('RightLowerArm', 0, 1.85, 1.05);
     setTarget('RightHand', 0, 0, 0);
   } else if (g === 'peace') {
-    const scissor = Math.sin(t * 3.4) * 0.06;
-    setFingerTarget('Left', 'Ring', 1.50, 0, t, 0.03);
-    setFingerTarget('Left', 'Little', 1.54, 0, t, 0.03);
-    setFingerTarget('Left', 'Thumb', 1.30, -0.40, t, 0.03);
-    setFingerTarget('Left', 'Index', -0.14, 0.22 + scissor, t, 0.04);
-    setFingerTarget('Left', 'Middle', -0.14, -0.22 - scissor, t, 0.04);
+    const scissor = 0;
+    setFingerTarget('Left', 'Ring', 1.35, 0, t, 0.03);
+    setFingerTarget('Left', 'Little', 1.37, 0, t, 0.03);
+    setFingerTarget('Left', 'Thumb', 1.30, 0, t, 0.03);
+    setFingerTarget('Left', 'Index', -0.22, 0.30 + scissor, t, 0.04);
+    setFingerTarget('Left', 'Middle', -0.22, -0.30 - scissor, t, 0.04);
     setTarget('LeftUpperArm', -0.75 + breathe, 0.15 + armSway, -0.30);
     setTarget('LeftLowerArm', 0, -2.05 - breathe * 1.2, -0.10);
     setTarget('LeftHand', 0.08 + wristRock * 0.8, -0.15, 0.35 + armSway * 1.5);
@@ -719,7 +721,7 @@ function updateTargets(t) {
     // Rock on: both hands up, index + pinky out, middle + ring held down by the thumb
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [0.95, -0.14, 1.50, 1.52, -0.14], [0, 0.10, 0, 0, -0.10], t);
+      poseFingers(side, [0.95, -0.22, 1.38, 1.40, -0.22], [0, 0.10, 0, 0, -0.10], t);
       setTarget(`${side}UpperArm`, -0.35 + breathe, dir * 0.20, dir * -0.55);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.10);
       setTarget(`${side}Hand`, 0, dir * -0.5, dir * 0.40);
@@ -728,7 +730,7 @@ function updateTargets(t) {
     // Omnia Prism: both hands up in front of her face, index + thumb tips meeting into a triangle
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [0.15, -0.14, 1.45, 1.50, 1.52], [dir * -0.35, dir * 0.35, 0, 0, 0], t);
+      poseFingers(side, [0.15, -0.22, 1.35, 1.38, 1.40], [dir * -0.35, dir * 0.35, 0, 0, 0], t);
       setTarget(`${side}UpperArm`, -0.60 + breathe, dir * -0.45, dir * -0.40);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.55);
       setTarget(`${side}Hand`, 0, dir * -0.5, 0);
@@ -738,14 +740,14 @@ function updateTargets(t) {
     const sides = g === 'bird' ? ['Right'] : ['Left', 'Right'];
     sides.forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [1.30, 1.45, -0.14, 1.48, 1.50], [0, 0, 0, 0, 0], t);
+      poseFingers(side, [1.25, 1.35, -0.22, 1.38, 1.40], [0, 0, 0, 0, 0], t);
       setTarget(`${side}UpperArm`, -0.55 + breathe, dir * 0.10, dir * -0.50);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.30);
       setTarget(`${side}Hand`, 0, dir * -0.75, 0);
     });
   } else if (g === 'westside') {
     // West Coast W: middle + ring up and split wide, index + pinky folded under the thumb
-    poseFingers('Right', [1.25, 1.45, -0.14, -0.14, 1.45], [0, 0, -0.38, 0.38, 0], t);
+    poseFingers('Right', [1.20, 1.35, -0.22, -0.22, 1.35], [0, 0, -0.38, 0.38, 0], t);
     setTarget('RightUpperArm', -0.55 + breathe, -0.10, 0.60);
     setTarget('RightLowerArm', 0, 1.95, 0.35);
     setTarget('RightHand', 0, 0.75, 0);
@@ -753,14 +755,14 @@ function updateTargets(t) {
     // Vulcan salute: palm up, fingers split down the middle
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [0.18, -0.14, -0.14, -0.14, -0.14], [-0.30, -0.22, -0.10, 0.24, 0.36], t);
+      poseFingers(side, [0.18, -0.22, -0.22, -0.22, -0.22], [-0.30, -0.22, -0.10, 0.24, 0.36], t);
       setTarget(`${side}UpperArm`, -0.70 + breathe, dir * 0.15, dir * -0.32);
       setTarget(`${side}LowerArm`, 0, dir * -2.00, dir * -0.10);
       setTarget(`${side}Hand`, 0, dir * -0.5, 0);
     });
   } else if (g === 'shaka') {
     // Shaka: thumb + pinky out, hand up by her ear like a phone
-    poseFingers('Right', [-0.14, 1.48, 1.50, 1.50, -0.14], [-0.35, 0, 0, 0, 0.35], t);
+    poseFingers('Right', [-0.14, 1.38, 1.40, 1.40, -0.22], [-0.35, 0, 0, 0, 0.35], t);
     setTarget('RightUpperArm', -0.15 + breathe, -0.55, 1.05);
     setTarget('RightLowerArm', 0, 2.50, 0.20);
     setTarget('RightHand', 0, 0.50, 0);
@@ -790,7 +792,7 @@ function updateTargets(t) {
   } else if (g === 'wave') {
     // Hero wave: right hand high overhead, waving side to side
     const waveSway = Math.sin(t * 5.0) * 0.35;
-    poseFingers('Right', [0.22, -0.14, -0.14, -0.14, -0.14], [-0.15, -0.06, 0, 0.06, 0.12], t);
+    poseFingers('Right', [0.22, -0.22, -0.22, -0.22, -0.22], [-0.15, -0.06, 0, 0.06, 0.12], t);
     setTarget('RightUpperArm', 0.10, -0.10, -1.55);
     setTarget('RightLowerArm', 0, 0.35, waveSway);
     setTarget('RightHand', 0, 0, waveSway * 0.8);
@@ -799,7 +801,7 @@ function updateTargets(t) {
     const clapOpen = Math.sin(t * 6.0) * 0.5 + 0.5;
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [0.22, -0.08, -0.08, -0.08, -0.08], [dir * -0.10, 0, 0, 0, 0], t, 0.02);
+      poseFingers(side, [0.22, -0.20, -0.20, -0.20, -0.20], [dir * -0.10, 0, 0, 0, 0], t, 0.02);
       setTarget(`${side}UpperArm`, -0.55 + breathe, dir * -(0.60 - clapOpen * 0.40), dir * -0.30);
       setTarget(`${side}LowerArm`, 0, dir * -(1.40 - clapOpen * 0.30), dir * -(0.90 - clapOpen * 0.40));
       setTarget(`${side}Hand`, 0, 0, 0);
@@ -807,20 +809,53 @@ function updateTargets(t) {
   }
 }
 
+// Human motion: every bone rides a spring toward its target — it speeds up, eases in and
+// settles, instead of sliding at one robotic constant speed. Each body part gets its own
+// timing: finger joints cascade knuckle-to-tip like a real finger closing, the hand trails
+// the arm with a little weight and lag, and left/right are a hair off-mirror (humans are).
+const boneVel = {};
+function smoothTimeFor(boneName) {
+  if (/Distal/.test(boneName)) return 0.12;
+  if (/Intermediate/.test(boneName)) return 0.09;
+  if (/Thumb|Index|Middle|Ring|Little/.test(boneName)) return 0.06;
+  if (/Hand$/.test(boneName)) return 0.26;
+  if (/LowerArm/.test(boneName)) return 0.16;
+  if (/LeftUpperArm/.test(boneName)) return 0.21;
+  if (/UpperArm/.test(boneName)) return 0.19;
+  if (/Head/.test(boneName)) return 0.22;
+  if (/Spine|Chest/.test(boneName)) return 0.24;
+  if (/Leg/.test(boneName)) return 0.17;
+  return 0.18;
+}
+function springAxis(boneName, axis, current, target, dt) {
+  const key = boneName + '.' + axis;
+  let vel = boneVel[key] || 0;
+  const smoothTime = Math.max(0.01, smoothTimeFor(boneName));
+  const omega = 2 / smoothTime;
+  const x = omega * dt;
+  const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+  const change = current - target;
+  const temp = (vel + omega * change) * dt;
+  vel = (vel - omega * temp) * exp;
+  let out = target + (change + temp) * exp;
+  if ((target - current > 0) === (out > target)) { out = target; vel = 0; }
+  boneVel[key] = vel;
+  return out;
+}
+
 function applyPoseAndExpressions(dt, t) {
   if (!currentVrm) return;
   const speed = Math.min(1, dt * 10);
+  const sdt = Math.min(dt, 0.033);
 
   for (const [boneName, rot] of Object.entries(targetRot)) {
     const formattedName = boneName.charAt(0).toLowerCase() + boneName.slice(1);
     const bone = currentVrm.humanoid.getNormalizedBoneNode(formattedName) || currentVrm.humanoid.getNormalizedBoneNode(boneName);
 
     if (!bone) continue;
-    const isFinger = /Thumb|Index|Middle|Ring|Little/.test(boneName);
-    const s = isFinger ? Math.min(1, dt * 18) : speed;
-    bone.rotation.x = THREE.MathUtils.lerp(bone.rotation.x, rot.x, s);
-    bone.rotation.y = THREE.MathUtils.lerp(bone.rotation.y, rot.y, s);
-    bone.rotation.z = THREE.MathUtils.lerp(bone.rotation.z, rot.z, s);
+    bone.rotation.x = springAxis(boneName, 'x', bone.rotation.x, rot.x, sdt);
+    bone.rotation.y = springAxis(boneName, 'y', bone.rotation.y, rot.y, sdt);
+    bone.rotation.z = springAxis(boneName, 'z', bone.rotation.z, rot.z, sdt);
   }
 
   if (currentVrm.expressionManager) {
@@ -846,16 +881,16 @@ function applyPoseAndExpressions(dt, t) {
     const targetY = 0.40 + Math.sin(t * 2.4) * 0.06;
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
   } else if (currentStance === 'dj') {
-    const targetY = Math.abs(Math.sin(t * 4.6)) * 0.085;
+    const targetY = Math.pow(Math.sin(t * 4.6), 2) * 0.085;
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
   } else if (currentStance === 'dash') {
-    const targetY = Math.abs(Math.sin(t * 10.0)) * 0.03;
+    const targetY = Math.pow(Math.sin(t * 10.0), 2) * 0.03;
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
   } else if (currentStance === 'dance') {
-    const targetY = Math.abs(Math.sin(t * 5.6)) * 0.095;
+    const targetY = Math.pow(Math.sin(t * 5.6), 2) * 0.095;
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
   } else if (currentStance === 'airguitar') {
-    const targetY = Math.abs(Math.sin(t * 4.5)) * 0.035;
+    const targetY = Math.pow(Math.sin(t * 4.5), 2) * 0.035;
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
   } else if (currentStance === 'powerup') {
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, -0.07, speed);
