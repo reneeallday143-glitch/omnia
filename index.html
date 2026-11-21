@@ -212,7 +212,6 @@
     </div>
   </div>
 
-  <!-- Standard UMD Three.js + OrbitControls (zero importmap / CDN module failures) -->
   <script src="https://jsdelivr.net"></script>
   <script src="https://jsdelivr.net"></script>
 
@@ -223,3 +222,4 @@
     const camera = new THREE.PerspectiveCamera(34, stageWrap.clientWidth / stageWrap.clientHeight, 0.05, 30);
     camera.position.set(0, 1.25, 2.35);
 
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
