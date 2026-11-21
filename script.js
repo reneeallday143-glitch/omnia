@@ -256,3 +256,190 @@ function updateTargets(t) {
     setFingerTarget('Right', 'Thumb', 0.35, -0.22, t, 0.04);
     setFingerTarget('Right', 'Index', 0.28 + tap1, 0.12, t, 0.05);
     setFingerTarget('Right', 'Middle', 0.34 + tap2, 0.04, t, 0.05);
+    setFingerTarget('Right', 'Ring', 0.40 + tap3, -0.04, t, 0.05);
+    setFingerTarget('Right', 'Little', 0.46 + tap4, -0.12, t, 0.05);
+
+    setTarget('RightShoulder', 0.08, -0.16, -0.08 - breathe * 0.3);
+    setTarget('RightUpperArm', -0.52 + breathe * 0.6, -0.64, 0.58);
+    setTarget('RightLowerArm', -0.12, -1.92, 0.36);
+    setTarget('RightHand', 0.12 + wristRock * 0.3, 0.35, 0.18);
+  } else if (g === 'peace') {
+    const scissor = Math.sin(t * 3.4) * 0.06;
+    setFingerTarget('Left', 'Ring', 1.50, 0, t, 0.03);
+    setFingerTarget('Left', 'Little', 1.54, 0, t, 0.03);
+    setFingerTarget('Left', 'Thumb', 1.05, -0.32, t, 0.03);
+    setFingerTarget('Left', 'Index', -0.06, 0.22 + scissor, t, 0.04);
+    setFingerTarget('Left', 'Middle', -0.06, -0.22 - scissor, t, 0.04);
+    setTarget('LeftUpperArm', -0.35 + breathe, 0.25 + armSway, -0.55);
+    setTarget('LeftLowerArm', 0, 1.55 + breathe * 1.4, -0.45);
+    setTarget('LeftHand', 0.08 + wristRock * 0.8, -1.35, 0.12 + armSway * 1.5);
+  } else if (g === 'kheart') {
+    const rub = Math.sin(t * 4.0) * 0.04;
+    ['Middle', 'Ring', 'Little'].forEach(f => setFingerTarget('Left', f, 1.54, 0, t, 0.03));
+    setFingerTarget('Left', 'Index', 0.60 + rub, -0.24, t, 0.02);
+    setFingerTarget('Left', 'Thumb', 0.54 - rub, 0.30, t, 0.02);
+    setTarget('LeftUpperArm', -0.32 + breathe, 0.30 + armSway, -0.58);
+    setTarget('LeftLowerArm', 0, 1.48 + breathe * 1.2, -0.40);
+    setTarget('LeftHand', 0.15 + wristRock * 0.7, -0.85, 0.10 + breathe);
+  } else if (g === 'westside') {
+    setFingerTarget('Left', 'Thumb', 1.25, -0.35, t, 0.03);
+    setFingerTarget('Left', 'Index', -0.06, 0.26, t, 0.05);
+    setFingerTarget('Left', 'Middle', 0.14, -0.22, t, 0.04);
+    setFingerTarget('Left', 'Ring', 0.04, 0.24, t, 0.04);
+    setFingerTarget('Left', 'Little', -0.06, -0.28, t, 0.05);
+    setTarget('LeftUpperArm', -0.38 + breathe, 0.25 + armSway, -0.52);
+    setTarget('LeftLowerArm', 0, 1.52 + breathe, -0.42);
+    setTarget('LeftHand', 0.05 + wristRock, -1.35, 0.08 + armSway);
+  } else if (g === 'vulcan') {
+    setFingerTarget('Left', 'Thumb', -0.10, 0.35, t, 0.04);
+    setFingerTarget('Left', 'Index', -0.05, 0.12, t, 0.03);
+    setFingerTarget('Left', 'Middle', -0.05, 0.18, t, 0.03);
+    setFingerTarget('Left', 'Ring', -0.05, -0.18, t, 0.03);
+    setFingerTarget('Left', 'Little', -0.05, -0.12, t, 0.03);
+    setTarget('LeftUpperArm', -0.34 + breathe, 0.22 + armSway, -0.55);
+    setTarget('LeftLowerArm', 0, 1.50 + breathe, -0.40);
+    setTarget('LeftHand', 0.05 + wristRock * 0.6, -1.38, 0.05 + breathe);
+  } else if (g === 'shaka') {
+    const shakaRock = Math.sin(t * 5.0) * 0.24;
+    ['Index', 'Middle', 'Ring'].forEach(f => setFingerTarget('Left', f, 1.52, 0, t, 0.03));
+    setFingerTarget('Left', 'Thumb', -0.10, 0.42, t, 0.06);
+    setFingerTarget('Left', 'Little', -0.08, -0.32, t, 0.06);
+    setTarget('LeftUpperArm', -0.32 + breathe, 0.25 + armSway, -0.54);
+    setTarget('LeftLowerArm', 0, 1.45 + shakaRock * 0.25, -0.38);
+    setTarget('LeftHand', shakaRock, -1.25, 0.15 + shakaRock * 0.6);
+  } else if (g === 'rock') {
+    const pump = Math.sin(t * 3.8) * 0.09;
+    ['Middle', 'Ring'].forEach(f => setFingerTarget('Left', f, 1.50, 0, t, 0.03));
+    setFingerTarget('Left', 'Thumb', 0.95, -0.30, t, 0.03);
+    setFingerTarget('Left', 'Index', -0.06, 0.16, t, 0.05);
+    setFingerTarget('Left', 'Little', -0.06, -0.16, t, 0.05);
+    setTarget('LeftUpperArm', -0.42 + pump, 0.22 + armSway, -0.50);
+    setTarget('LeftLowerArm', 0, 1.58 + pump, -0.45);
+    setTarget('LeftHand', 0.05 + pump, -1.35, 0.10);
+  } else if (g === 'bird') {
+    ['Index', 'Ring', 'Little'].forEach(f => setFingerTarget('Left', f, 1.56, 0, t, 0.03));
+    setFingerTarget('Left', 'Thumb', 0.95, -0.28, t, 0.03);
+    setFingerTarget('Left', 'Middle', -0.06, 0, t, 0.04);
+    setTarget('LeftUpperArm', -0.38 + breathe, 0.25 + armSway, -0.52);
+    setTarget('LeftLowerArm', 0, 1.55 + breathe, -0.42);
+    setTarget('LeftHand', -0.08 + wristRock * 0.6, 1.42, 0.05 + armSway);
+  } else if (g === 'rebel2') {
+    ['Left', 'Right'].forEach(side => {
+      const dir = side === 'Left' ? 1 : -1;
+      ['Index', 'Ring', 'Little'].forEach(f => setFingerTarget(side, f, 1.55, 0, t, 0.03));
+      setFingerTarget(side, 'Middle', -0.06, 0, t, 0.04);
+      setFingerTarget(side, 'Thumb', -0.08, 0.35, t, 0.05);
+      setTarget(`${side}UpperArm`, -0.40 + breathe, dir * (0.25 + armSway), dir * -0.50);
+      setTarget(`${side}LowerArm`, 0, dir * (1.52 + breathe), dir * -0.42);
+      setTarget(`${side}Hand`, -0.08 + wristRock * 0.6, dir * 1.38, dir * (0.08 + armSway));
+    });
+  } else if (g === 'omniaSign') {
+    const pulse = Math.sin(t * 2.2) * 0.03;
+    ['Left', 'Right'].forEach(side => {
+      const dir = side === 'Left' ? 1 : -1;
+      setFingerTarget(side, 'Thumb', -0.05, 0.48, t, 0.02);
+      setFingerTarget(side, 'Index', 0.06, -0.26, t, 0.02);
+      setFingerTarget(side, 'Middle', 0.92 + pulse, -0.18, t, 0.03);
+      setFingerTarget(side, 'Ring', -0.06, 0.18 + pulse, t, 0.05);
+      setFingerTarget(side, 'Little', -0.06, 0.36 + pulse * 1.4, t, 0.06);
+      setTarget(`${side}Shoulder`, 0.05, dir * 0.15, dir * (0.05 + breathe * 0.3));
+      setTarget(`${side}UpperArm`, -0.48 + breathe * 0.5, dir * 0.52, dir * -0.42);
+      setTarget(`${side}LowerArm`, 0, dir * (1.72 + breathe * 0.4), dir * -0.58);
+      setTarget(`${side}Hand`, 0.08 + wristRock * 0.3, dir * -1.18, dir * -0.18);
+    });
+  } else if (g === 'worldFlex') {
+    if (crownGroup && !crownVisible) toggleCrown();
+    ['Left', 'Right'].forEach(side => {
+      const dir = side === 'Left' ? 1 : -1;
+      const tap1 = Math.sin(t * 4.2) * 0.14;
+      const tap2 = Math.sin(t * 4.2 - 0.6) * 0.16;
+      const tap3 = Math.sin(t * 4.2 - 1.2) * 0.18;
+      const tap4 = Math.sin(t * 4.2 - 1.8) * 0.20;
+      setFingerTarget(side, 'Thumb', 0.25, 0.22, t, 0.04);
+      setFingerTarget(side, 'Index', 0.38 + tap1, 0.10, t, 0.05);
+      setFingerTarget(side, 'Middle', 0.44 + tap2, 0.03, t, 0.05);
+      setFingerTarget(side, 'Ring', 0.50 + tap3, -0.04, t, 0.05);
+      setFingerTarget(side, 'Little', 0.56 + tap4, -0.12, t, 0.05);
+      const swagger = Math.sin(t * 2.1) * 0.045;
+      setTarget(`${side}Shoulder`, 0.08, dir * 0.12, dir * (0.18 + swagger));
+      setTarget(`${side}UpperArm`, -0.82 + swagger, dir * 0.35, dir * -0.15);
+      setTarget(`${side}LowerArm`, 0, dir * (1.85 + swagger), dir * -0.48);
+      setTarget(`${side}Hand`, 0.18 + wristRock * 0.5, dir * -0.65, dir * -0.25);
+    });
+  } else if (g === 'hips') {
+    ['Left', 'Right'].forEach(side => {
+      const dir = side === 'Left' ? 1 : -1;
+      FINGERS.forEach((f, i) => setFingerTarget(side, f, 0.45 + i * 0.05, 0, t, 0.04));
+      setTarget(`${side}UpperArm`, 0.15 + breathe, dir * -0.35, dir * -0.78);
+      setTarget(`${side}LowerArm`, 0, dir * 1.45, dir * -0.35);
+      setTarget(`${side}Hand`, 0, 0, dir * -0.45);
+    });
+  } else if (g === 'gangster') {
+    setTarget('Spine', 0.05, 0.12, -0.12);
+    setTarget('RightUpperArm', 0.18, 0.35, 0.78);
+    setTarget('RightLowerArm', 0, -1.45, 0.35);
+    setTarget('LeftUpperArm', -0.25, 0.25, -0.58);
+    setTarget('LeftLowerArm', 0, 1.35, -0.35);
+  } else if (g === 'wave') {
+    const w = Math.sin(t * 5.2) * 0.28;
+    FINGERS.forEach(f => setFingerTarget('Left', f, -0.04, 0.12, t, 0.07));
+    setTarget('LeftUpperArm', -0.20, 0.15, 0.65 + w * 0.35);
+    setTarget('LeftLowerArm', 0, 1.35, 0.35 + w * 0.5);
+    setTarget('LeftHand', 0.1, -1.2, w);
+  } else if (g === 'clap') {
+    const c = Math.abs(Math.sin(t * 6.5)) * 0.35;
+    ['Left', 'Right'].forEach(side => {
+      const dir = side === 'Left' ? 1 : -1;
+      FINGERS.forEach(f => setFingerTarget(side, f, 0.1, 0.05, t, 0.04));
+      setTarget(`${side}UpperArm`, -0.45, dir * (0.45 - c), dir * -0.45);
+      setTarget(`${side}LowerArm`, 0, dir * (1.65 - c), dir * -0.45);
+    });
+  }
+
+  if (currentStance === 'dj') {
+    const beat = Math.sin(t * 7.5) * 0.15;
+    setTarget('LeftUpperArm', -0.55, 0.35, -0.35);
+    setTarget('LeftLowerArm', 0, 1.85, -0.55);
+    setTarget('RightUpperArm', -0.35 + beat, -0.25, 0.75);
+    setTarget('RightLowerArm', 0, -1.35 - beat, 0.45);
+    setTarget('Spine', 0.08 + beat * 0.2, 0.1, 0);
+  } else if (currentStance === 'arcade') {
+    setTarget('LeftUpperArm', -0.55, 0.3, 0.45);
+    setTarget('LeftLowerArm', 0, 1.65, 0.35);
+    setTarget('RightUpperArm', 0.18, -0.35, 0.78);
+    setTarget('RightLowerArm', 0, -1.45, 0.35);
+  } else if (currentStance === 'sprint') {
+    const run = Math.sin(t * 8.0);
+    setTarget('Spine', 0.18, run * 0.12, 0);
+    setTarget('LeftUpperLeg', run * 0.75, 0, 0);
+    setTarget('RightUpperLeg', -run * 0.75, 0, 0);
+    setTarget('LeftLowerLeg', Math.max(0, -run * 0.9), 0, 0);
+    setTarget('RightLowerLeg', Math.max(0, run * 0.9), 0, 0);
+    setTarget('LeftUpperArm', -run * 0.65, 0, -1.05);
+    setTarget('RightUpperArm', run * 0.65, 0, 1.05);
+    setTarget('LeftLowerArm', 0, 1.25, -0.2);
+    setTarget('RightLowerArm', 0, -1.25, 0.2);
+  } else if (currentStance === 'dash') {
+    setTarget('Spine', 0.26, -0.18, 0);
+    setTarget('LeftUpperArm', 0.45, -0.2, -1.05);
+    setTarget('RightUpperArm', 0.45, 0.2, 1.05);
+  } else if (currentStance === 'stargazer') {
+    setTarget('Head', -0.28, 0.15, 0.06);
+    setTarget('Spine', -0.10, 0.08, 0);
+  }
+}
+
+function applyPoseAndExpressions(dt, t) {
+  if (!currentVrm) return;
+  const speed = Math.min(1, dt * 10);
+
+  for (const [boneName, rot] of Object.entries(targetRot)) {
+    const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
+    if (!bone) continue;
+    bone.rotation.x += (rot.x - bone.rotation.x) * speed;
+    bone.rotation.y += (rot.y - bone.rotation.y) * speed;
+    bone.rotation.z += (rot.z - bone.rotation.z) * speed;
+  }
+
+  if (currentVrm.expressionManager) {
+    ['happy', 'angry', 'sad', 'relaxed', 'surprised', 'oh'].forEach(k => currentVrm.expressionManager.setValue(k, 0));
