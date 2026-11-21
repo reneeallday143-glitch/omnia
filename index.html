@@ -21,7 +21,8 @@
       background: radial-gradient(circle at 50% 45%, #1c1236 0%, #090d12 100%);
       overflow: hidden;
     }
-    #stage-canvas { width: 100%; height: 100%; display: block; }
+    #stage-canvas { width: 100%; height: 100%; display: block; cursor: grab; }
+    #stage-canvas:active { cursor: grabbing; }
 
     #bottom-controls {
       position: absolute;
@@ -104,11 +105,12 @@
 <body>
 
   <div id="stage-wrap">
+    <canvas id="stage-canvas"></canvas>
     <div id="bottom-controls">
       <button class="ctrl-btn" id="pause-btn" onclick="togglePause()">⏸ Stand Still (Playing)</button>
       <button class="ctrl-btn" onclick="flipModel()">🔄 Flip 180°</button>
-      <button class="ctrl-btn" onclick="zoomCam(-0.28)">➕ Zoom In</button>
-      <button class="ctrl-btn" onclick="zoomCam(0.28)">➖ Zoom Out</button>
+      <button class="ctrl-btn" onclick="zoomCam(0.18)">➕ Zoom In</button>
+      <button class="ctrl-btn" onclick="zoomCam(-0.18)">➖ Zoom Out</button>
       <button class="ctrl-btn" onclick="faceCam()">😊 Face Cam</button>
     </div>
   </div>
@@ -212,14 +214,18 @@
     </div>
   </div>
 
-  <!-- Cloudflare CDN (bypasses jsdelivr SSL block on your network) -->
-  <script src="https://cloudflare.com"></script>
-  <script src="https://cloudflare.com"></script>
-
   <script>
     const stageWrap = document.getElementById('stage-wrap');
-    const scene = new THREE.Scene();
+    const canvas = document.getElementById('stage-canvas');
+    const ctx = canvas.getContext('2d');
 
-    const camera = new THREE.PerspectiveCamera(34, stageWrap.clientWidth / stageWrap.clientHeight, 0.05, 30);
-    camera.position.set(0, 1.25, 2.35);
+    let W = 0, H = 0;
+    function resize() {
+      W = canvas.width = stageWrap.clientWidth;
+      H = canvas.height = stageWrap.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
+    let currentHand = 'relaxed';
+    let currentExpr = 'neutral';
