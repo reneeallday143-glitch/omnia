@@ -5,112 +5,31 @@
   <title>Omnia VRM Studio — Niecee C</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #0d1117;
-      color: #e2e8f0;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    #stage-wrap {
-      position: relative;
-      flex: 1;
-      height: 100vh;
-      background: radial-gradient(circle at 50% 45%, #1c1236 0%, #090d12 100%);
-      overflow: hidden;
-    }
-    #stage-canvas { width: 100%; height: 100%; display: block; cursor: grab; }
-    #stage-canvas:active { cursor: grabbing; }
-
-    #bottom-controls {
-      position: absolute;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10;
-      display: flex;
-      gap: 6px;
-      background: rgba(13, 17, 23, 0.92);
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-    }
-    .ctrl-btn {
-      background: #1e2433;
-      color: #e2e8f0;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 11px;
-      cursor: pointer;
-      white-space: nowrap;
-    }
+    body { background: #0d1117; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+    #stage-wrap { position: relative; flex: 1; height: 100vh; background: radial-gradient(circle at 50% 45%, #1c1236 0%, #090d12 100%); overflow: hidden; }
+    #stage-canvas { width: 100%; height: 100%; display: block; }
+    #bottom-controls { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 6px; background: rgba(13,17,23,0.92); padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); }
+    .ctrl-btn { background: #1e2433; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.12); padding: 5px 10px; border-radius: 5px; font-size: 11px; cursor: pointer; white-space: nowrap; }
     .ctrl-btn:hover { background: #2c354a; }
     .ctrl-btn.active { background: #4f46e5; border-color: #818cf8; color: #fff; }
-
-    #sidebar {
-      width: 480px;
-      height: 100vh;
-      background: #11141d;
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
-      overflow-y: auto;
-      padding: 12px 14px 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 13px;
-    }
+    #sidebar { width: 480px; height: 100vh; background: #11141d; border-left: 1px solid rgba(255,255,255,0.1); overflow-y: auto; padding: 12px 14px 28px; display: flex; flex-direction: column; gap: 13px; }
     #sidebar::-webkit-scrollbar { width: 6px; }
     #sidebar::-webkit-scrollbar-thumb { background: #2d3248; border-radius: 3px; }
-
-    .section-title {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: #8b93b0;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-    }
-
+    .section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: #8b93b0; text-transform: uppercase; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.07); }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-
-    .pose-btn {
-      background: #1a1f2e;
-      color: #d8deef;
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      border-radius: 6px;
-      padding: 7px 8px;
-      font-size: 11.5px;
-      cursor: pointer;
-      text-align: center;
-      transition: 0.15s;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .pose-btn:hover { background: #262d42; border-color: rgba(255, 255, 255, 0.22); }
-    .pose-btn.active {
-      background: #2b3254;
-      border-color: #6366f1;
-      color: #fff;
-      font-weight: 600;
-      box-shadow: 0 0 0 1px #6366f1 inset;
-    }
+    .pose-btn { background: #1a1f2e; color: #d8deef; border: 1px solid rgba(255,255,255,0.09); border-radius: 6px; padding: 7px 8px; font-size: 11.5px; cursor: pointer; text-align: center; transition: 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pose-btn:hover { background: #262d42; border-color: rgba(255,255,255,0.22); }
+    .pose-btn.active { background: #2b3254; border-color: #6366f1; color: #fff; font-weight: 600; box-shadow: 0 0 0 1px #6366f1 inset; }
   </style>
 </head>
 <body>
-
   <div id="stage-wrap">
-    <canvas id="stage-canvas"></canvas>
     <div id="bottom-controls">
       <button class="ctrl-btn" id="pause-btn" onclick="togglePause()">⏸ Stand Still (Playing)</button>
       <button class="ctrl-btn" onclick="flipModel()">🔄 Flip 180°</button>
-      <button class="ctrl-btn" onclick="zoomCam(0.18)">➕ Zoom In</button>
-      <button class="ctrl-btn" onclick="zoomCam(-0.18)">➖ Zoom Out</button>
+      <button class="ctrl-btn" onclick="zoomCam(-0.28)">➕ Zoom In</button>
+      <button class="ctrl-btn" onclick="zoomCam(0.28)">➖ Zoom Out</button>
       <button class="ctrl-btn" onclick="faceCam()">😊 Face Cam</button>
     </div>
   </div>
@@ -214,18 +133,10 @@
     </div>
   </div>
 
-  <script>
-    const stageWrap = document.getElementById('stage-wrap');
-    const canvas = document.getElementById('stage-canvas');
-    const ctx = canvas.getContext('2d');
-
-    let W = 0, H = 0;
-    function resize() {
-      W = canvas.width = stageWrap.clientWidth;
-      H = canvas.height = stageWrap.clientHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    let currentHand = 'relaxed';
-    let currentExpr = 'neutral';
+  <script src="https://unpkg.com"></script>
+  <script src="https://unpkg.com"></script>
+  <script src="https://unpkg.com"></script>
+  <script src="https://unpkg.com"></script>
+  <script src="./script.js"></script>
+</body>
+</html>
