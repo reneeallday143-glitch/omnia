@@ -444,8 +444,8 @@ window.setFx = (fx, btn) => {
 function setFingerTarget(side, finger, curl, spread = 0, t = 0, motionAmp = 0.06) {
   const dir = side === 'Left' ? 1 : -1;
   const idx = FINGERS.indexOf(finger);
-  const wave = Math.sin(t * 2.8 + idx * 0.85) * motionAmp;
-  const splayWave = Math.cos(t * 2.1 + idx * 0.6) * (motionAmp * 0.45);
+  const wave = Math.sin(t * 1.1 + idx * 0.15) * motionAmp * 0.25;
+  const splayWave = Math.cos(t * 0.9 + idx * 0.10) * (motionAmp * 0.10);
   const c = curl + wave;
   const s = spread + splayWave;
 
@@ -454,9 +454,9 @@ function setFingerTarget(side, finger, curl, spread = 0, t = 0, motionAmp = 0.06
     setTarget(`${side}ThumbMetacarpal`, 0.10 * c, 0, dir * (c * 0.55));
     setTarget(`${side}ThumbDistal`, 0.05 * c, 0, dir * (c * 0.50));
   } else {
-    setTarget(`${side}${finger}Proximal`, 0, dir * s, dir * (c * 0.85));
+    setTarget(`${side}${finger}Proximal`, 0, dir * s, dir * (c * 0.92));
     setTarget(`${side}${finger}Intermediate`, 0, 0, dir * (c * 0.95));
-    setTarget(`${side}${finger}Distal`, 0, 0, dir * (c * 0.70));
+    setTarget(`${side}${finger}Distal`, 0, 0, dir * (c * 0.62));
   }
 }
 
