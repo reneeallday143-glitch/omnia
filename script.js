@@ -120,7 +120,7 @@ loader.register((parser) => new THREE_VRM.VRMLoaderPlugin(parser));
 loader.load('./Niecee%20C.vrm', (gltf) => {
   const vrm = gltf.userData.vrm;
   THREE_VRM.VRMUtils.removeUnnecessaryVertices(gltf.scene);
-  THREE_VRM.VRMUtils.combineSkeletons(gltf.scene);
+  
   vrm.scene.rotation.y = Math.PI;
   scene.add(vrm.scene);
   currentVrm = vrm;
