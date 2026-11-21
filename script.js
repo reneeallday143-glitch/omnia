@@ -105,7 +105,7 @@ function attachCrown(vrm) {
     crownGroup.add(spireHolder);
   }
 
-  const headBone = vrm.humanoid.getNormalizedBoneNode('Head');
+const headBone = vrm.humanoid.getNormalizedBoneNode('head') || vrm.humanoid.getNormalizedBoneNode('Head');
   if (headBone) {
     crownGroup.position.set(0, 0.145, -0.01);
     crownGroup.rotation.x = -0.12;
@@ -434,8 +434,8 @@ function applyPoseAndExpressions(dt, t) {
   if (!currentVrm) return;
   const speed = Math.min(1, dt * 10);
 
-  for (const [boneName, rot] of Object.entries(targetRot)) {
-    const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName);
+  const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName[0].toLowerCase() + boneName.slice(1)) || currentVrm.humanoid.getNormalizedBoneNode(boneName);
+    
     if (!bone) continue;
     bone.rotation.x += (rot.x - bone.rotation.x) * speed;
     bone.rotation.y += (rot.y - bone.rotation.y) * speed;
