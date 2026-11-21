@@ -1,146 +1,371 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Omnia VRM Studio — Niecee C</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #0d1117; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; overflow: hidden; }
-    #stage-wrap { position: relative; flex: 1; height: 100vh; background: radial-gradient(circle at 50% 45%, #1c1236 0%, #090d12 100%); overflow: hidden; }
-    #stage-canvas { width: 100%; height: 100%; display: block; }
-    #bottom-controls { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 6px; background: rgba(13,17,23,0.92); padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.14); }
-    .ctrl-btn { background: #1e2433; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.12); padding: 5px 10px; border-radius: 5px; font-size: 11px; cursor: pointer; white-space: nowrap; }
-    .ctrl-btn:hover { background: #2c354a; }
-    .ctrl-btn.active { background: #4f46e5; border-color: #818cf8; color: #fff; }
-    #sidebar { width: 480px; height: 100vh; background: #11141d; border-left: 1px solid rgba(255,255,255,0.1); overflow-y: auto; padding: 12px 14px 28px; display: flex; flex-direction: column; gap: 13px; }
-    #sidebar::-webkit-scrollbar { width: 6px; }
-    #sidebar::-webkit-scrollbar-thumb { background: #2d3248; border-radius: 3px; }
-    .section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: #8b93b0; text-transform: uppercase; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.07); }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-    .pose-btn { background: #1a1f2e; color: #d8deef; border: 1px solid rgba(255,255,255,0.09); border-radius: 6px; padding: 7px 8px; font-size: 11.5px; cursor: pointer; text-align: center; transition: 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pose-btn:hover { background: #262d42; border-color: rgba(255,255,255,0.22); }
-    .pose-btn.active { background: #2b3254; border-color: #6366f1; color: #fff; font-weight: 600; box-shadow: 0 0 0 1px #6366f1 inset; }
-  </style>
-</head>
-<body>
-  <div id="stage-wrap">
-    <div id="bottom-controls">
-      <button class="ctrl-btn" id="pause-btn" onclick="togglePause()">⏸ Stand Still (Playing)</button>
-      <button class="ctrl-btn" onclick="flipModel()">🔄 Flip 180°</button>
-      <button class="ctrl-btn" onclick="zoomCam(-0.28)">➕ Zoom In</button>
-      <button class="ctrl-btn" onclick="zoomCam(0.28)">➖ Zoom Out</button>
-      <button class="ctrl-btn" onclick="faceCam()">😊 Face Cam</button>
-    </div>
-  </div>
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 
-  <div id="sidebar">
-    <div>
-      <div class="section-title">ALL FACIAL EXPRESSIONS (12)</div>
-      <div class="grid-3">
-        <button class="pose-btn active" onclick="setExpr('neutral', this)">😐 Neutral</button>
-        <button class="pose-btn" onclick="setExpr('happy', this)">😄 Happy</button>
-        <button class="pose-btn" onclick="setExpr('oh', this)">😮 Big Grin</button>
-        <button class="pose-btn" onclick="setExpr('sad', this)">😢 Sad</button>
-        <button class="pose-btn" onclick="setExpr('sorrow', this)">😭 Crying</button>
-        <button class="pose-btn" onclick="setExpr('angry', this)">😠 Angry</button>
-        <button class="pose-btn" onclick="setExpr('furious', this)">😡 Furious</button>
-        <button class="pose-btn" onclick="setExpr('surprised', this)">😲 Surprised</button>
-        <button class="pose-btn" onclick="setExpr('shocked', this)">😱 Shocked</button>
-        <button class="pose-btn" onclick="setExpr('wink', this)">😉 Wink</button>
-        <button class="pose-btn" onclick="setExpr('smug', this)">😏 Smug</button>
-        <button class="pose-btn" onclick="setExpr('relaxed', this)">😴 Sleepy</button>
-      </div>
-    </div>
+const stageWrap = document.getElementById('stage-wrap');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, stageWrap.clientWidth / stageWrap.clientHeight, 0.05, 30);
+camera.position.set(0, 1.25, 2.35);
 
-    <div>
-      <div class="section-title">SIGNATURE HAND GESTURES</div>
-      <div class="grid-2" id="hand-grid">
-        <button class="pose-btn active" onclick="setHand('relaxed', this)">🫳 Relaxed Hands</button>
-        <button class="pose-btn" onclick="setHand('peace', this)">✌️ Peace Sign</button>
-        <button class="pose-btn" onclick="setHand('kheart', this)">🫰 Korean Heart</button>
-        <button class="pose-btn" onclick="setHand('rock', this)">🤘 Rock On</button>
-        <button class="pose-btn" onclick="setHand('omniaSign', this)">🔺 Omnia Prism Sign</button>
-        <button class="pose-btn" onclick="setHand('bird', this)">🖕 Middle Finger</button>
-        <button class="pose-btn" onclick="setHand('rebel2', this)">🖕🖕 Double Middle Finger</button>
-        <button class="pose-btn" onclick="setHand('westside', this)">🇼 West Coast W</button>
-        <button class="pose-btn" onclick="setHand('vulcan', this)">🖖 Vulcan Salute</button>
-        <button class="pose-btn" onclick="setHand('shaka', this)">🤙 Shaka / Hang Loose</button>
-      </div>
-    </div>
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(stageWrap.clientWidth, stageWrap.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.domElement.id = 'stage-canvas';
+stageWrap.appendChild(renderer.domElement);
 
-    <div>
-      <div class="section-title">CREATOR ATTITUDE POSES</div>
-      <div class="grid-2" id="attitude-grid">
-        <button class="pose-btn" onclick="setHand('relaxed', this)">🧍 Arms Down (Idle)</button>
-        <button class="pose-btn" onclick="setHand('hips', this)">💁 Hands on Hips</button>
-        <button class="pose-btn" onclick="setHand('crossedArms', this)">🙅 Arms Folded</button>
-        <button class="pose-btn" onclick="setHand('gangster', this)">😎 Gangster Lean</button>
-        <button class="pose-btn" onclick="setHand('worldFlex', this)">👑 Royal Flex</button>
-        <button class="pose-btn" onclick="setHand('wave', this)">👋 Hero Wave</button>
-      </div>
-    </div>
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.05, 0);
+controls.update();
 
-    <div>
-      <div class="section-title">ORIGINAL OMNIA STANCES & FX</div>
-      <div class="grid-2" id="stance-grid">
-        <button class="pose-btn active" onclick="setStance('none', this)">🧍 Standard Grounded</button>
-        <button class="pose-btn" onclick="setStance('float', this)">✨ Zero-G Float</button>
-        <button class="pose-btn" onclick="setStance('holo', this)">💠 Holo-Stream</button>
-        <button class="pose-btn" onclick="setStance('arcade', this)">🕹️ Arcade Win</button>
-        <button class="pose-btn" onclick="setStance('domain', this)">🌌 Domain Seal</button>
-        <button class="pose-btn" onclick="setStance('dash', this)">⚡ Cyber-Dash</button>
-        <button class="pose-btn" onclick="setStance('dj', this)">🎧 Beat-Drop DJ</button>
-        <button class="pose-btn" onclick="setStance('stargazer', this)">🌠 Star-Gazer</button>
-        <button class="pose-btn active" id="crown-toggle" onclick="toggleCrown()">👑 Crown Summon</button>
-      </div>
-    </div>
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
+dirLight.position.set(1, 2, 2);
+scene.add(dirLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.85));
 
-    <div>
-      <div class="section-title">BODY MOVEMENTS & ACTIONS</div>
-      <div class="grid-2" id="action-grid">
-        <button class="pose-btn" onclick="setStance('sprint', this)">🏃 Neon Sprint</button>
-        <button class="pose-btn" onclick="setStance('skyleap', this)">🚀 Sky Leap</button>
-        <button class="pose-btn" onclick="setHand('clap', this)">👏 Hyper Clap</button>
-        <button class="pose-btn" onclick="setStance('vortex', this)">🌀 Vortex Spin</button>
-      </div>
-    </div>
+const grid = new THREE.GridHelper(6, 24, 0xc084fc, 0x6b21a8);
+scene.add(grid);
 
-    <div>
-      <div class="section-title">CUSTOM STAGE BACKGROUNDS (ILLUSTRATED SCENES)</div>
-      <div class="grid-2">
-        <button class="pose-btn" onclick="setBg('cyber', this)">🌃 Cyber Tokyo Rooftop</button>
-        <button class="pose-btn" onclick="setBg('sakura', this)">🌸 Sakura Shrine Night</button>
-        <button class="pose-btn" onclick="setBg('skylounge', this)">🏙️ Sky Lounge Penthouse</button>
-        <button class="pose-btn" onclick="setBg('omnialobby', this)">💠 Omnia Neon Lobby</button>
-        <button class="pose-btn" onclick="setBg('nebula', this)">🌌 Starlight Nebula</button>
-        <button class="pose-btn" onclick="setBg('miami', this)">🌴 Miami Vaporwave</button>
-        <button class="pose-btn" onclick="setBg('crimson', this)">🔥 Crimson Boss Arena</button>
-        <button class="pose-btn active" onclick="setBg('studio', this)">📸 Clean Photo Studio</button>
-      </div>
-    </div>
+const particleCount = 65;
+const particleGroup = new THREE.Group();
+const particleMat = new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.55 });
+const particles = [];
+for (let i = 0; i < particleCount; i++) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(0.01, 0.01), particleMat);
+  m.position.set((Math.random() - 0.5) * 3.8, Math.random() * 2.8, (Math.random() - 0.5) * 2.6);
+  particleGroup.add(m);
+  particles.push({ mesh: m, speed: 0.15 + Math.random() * 0.25, drift: (Math.random() - 0.5) * 0.18 });
+}
+scene.add(particleGroup);
 
-    <div>
-      <div class="section-title">ATMOSPHERES & MOVING 3D PARTICLES</div>
-      <div class="grid-2">
-        <button class="pose-btn" onclick="setFx('petals', this)">🌸 Sakura Glitch (Petals)</button>
-        <button class="pose-btn" onclick="setFx('embers', this)">🔥 Aether Eclipse (Embers)</button>
-        <button class="pose-btn" onclick="setFx('bubbles', this)">🫧 Abyssal Biolume (Bubbles)</button>
-        <button class="pose-btn" onclick="setFx('sparks', this)">✨ Celestial Prism (Sparks)</button>
-        <button class="pose-btn" onclick="setFx('lasers', this)">⚡ Void Overdrive (Lasers)</button>
-        <button class="pose-btn active" onclick="setFx('motes', this)">☀️ Solaris Mirage (Motes)</button>
-      </div>
-    </div>
-  </div>
+let currentVrm = null;
+let currentHand = 'relaxed';
+let currentExpr = 'neutral';
+let currentStance = 'none';
+let isPaused = false;
+let modelFlipped = false;
+let crownGroup = null;
+let crownVisible = true;
+const clock = new THREE.Clock();
+const FINGERS = ['Thumb', 'Index', 'Middle', 'Ring', 'Little'];
+const targetRot = {};
 
+function setTarget(boneName, x, y, z) {
+  targetRot[boneName] = { x, y, z };
+}
+
+function attachCrown(vrm) {
+  if (crownGroup && crownGroup.parent) crownGroup.parent.remove(crownGroup);
+  crownGroup = new THREE.Group();
+
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xffc83b, metalness: 0.92, roughness: 0.18 });
+  const darkGoldMat = new THREE.MeshStandardMaterial({ color: 0xb88214, metalness: 0.88, roughness: 0.28 });
+  const gemColors = [0xff1744, 0x00e5ff, 0x2979ff, 0xff1744, 0x00e5ff, 0x2979ff, 0xff1744, 0x2979ff];
+
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.108, 0.102, 0.026, 32, 1, true), goldMat);
+  band.material.side = THREE.DoubleSide;
+  crownGroup.add(band);
+
+  const rimTop = new THREE.Mesh(new THREE.TorusGeometry(0.108, 0.0035, 10, 36), darkGoldMat);
+  rimTop.rotation.x = Math.PI / 2;
+  rimTop.position.y = 0.013;
+  crownGroup.add(rimTop);
+
+  const rimBot = rimTop.clone();
+  rimBot.position.y = -0.013;
+  crownGroup.add(rimBot);
+
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const isFront = i === 0;
+    const isMain = i % 2 === 0;
+    const h = isFront ? 0.068 : (isMain ? 0.050 : 0.034);
+
+    const spireHolder = new THREE.Group();
+    spireHolder.rotation.y = angle;
+
+    const spire = new THREE.Mesh(new THREE.ConeGeometry(isFront ? 0.018 : 0.013, h, 4), goldMat);
+    spire.position.set(0, 0.013 + h / 2, 0.106);
+    spire.rotation.x = -0.14;
+    spireHolder.add(spire);
+
+    const finial = new THREE.Mesh(
+      new THREE.OctahedronGeometry(isFront ? 0.0085 : 0.0055, 0),
+      new THREE.MeshStandardMaterial({ color: gemColors[i], emissive: gemColors[i], emissiveIntensity: 0.45, roughness: 0.1 })
+    );
+    finial.position.set(0, 0.013 + h + 0.010, 0.114);
+    spireHolder.add(finial);
+
+    const gem = new THREE.Mesh(
+      new THREE.OctahedronGeometry(isFront ? 0.010 : 0.0065, 1),
+      new THREE.MeshStandardMaterial({ color: gemColors[i], emissive: gemColors[i], emissiveIntensity: 0.35, roughness: 0.15 })
+    );
+    gem.scale.set(1, 1, 0.55);
+    gem.position.set(0, 0, 0.109);
+    spireHolder.add(gem);
+
+    crownGroup.add(spireHolder);
+  }
+
+  const headBone = vrm.humanoid.getNormalizedBoneNode('Head');
+  if (headBone) {
+    crownGroup.position.set(0, 0.145, -0.01);
+    crownGroup.rotation.x = -0.12;
+    crownGroup.visible = crownVisible;
+    headBone.add(crownGroup);
+  }
+}
+
+// Automatically load your model file on startup
+const loader = new GLTFLoader();
+loader.register(parser => new VRMLoaderPlugin(parser));
+loader.load('./Niecee%20C.vrm', (gltf) => {
+  const vrm = gltf.userData.vrm;
+  if (!vrm) { console.error('No VRM found in gltf'); return; }
+  VRMUtils.removeUnnecessaryVertices(gltf.scene);
+  vrm.scene.rotation.y = Math.PI;
+  scene.add(vrm.scene);
+  currentVrm = vrm;
+  attachCrown(vrm);
+  console.log('Niecee C.vrm loaded successfully!');
+}, undefined, (err) => console.error('VRM load error:', err));
+
+function activateBtn(btn) {
+  if (!btn) return;
+  btn.parentElement.querySelectorAll('.pose-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+window.setHand = (gesture, btn) => {
+  currentHand = gesture;
+  document.querySelectorAll('#hand-grid .pose-btn, #attitude-grid .pose-btn, #action-grid .pose-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+};
+
+window.setExpr = (expr, btn) => { currentExpr = expr; activateBtn(btn); };
+
+window.setStance = (stance, btn) => {
+  currentStance = stance;
+  document.querySelectorAll('#stance-grid .pose-btn:not(#crown-toggle), #action-grid .pose-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+};
+
+window.toggleCrown = () => {
+  crownVisible = !crownVisible;
+  if (crownGroup) crownGroup.visible = crownVisible;
+  const toggleBtn = document.getElementById('crown-toggle');
+  if (toggleBtn) toggleBtn.classList.toggle('active', crownVisible);
+};
+
+window.togglePause = () => {
+  isPaused = !isPaused;
+  const btn = document.getElementById('pause-btn');
+  if (btn) {
+    btn.textContent = isPaused ? '▶ Stand Still (Paused)' : '⏸ Stand Still (Playing)';
+    btn.classList.toggle('active', isPaused);
+  }
+};
+
+window.flipModel = () => {
+  modelFlipped = !modelFlipped;
+  if (currentVrm) currentVrm.scene.rotation.y = modelFlipped ? 0 : Math.PI;
+};
+
+window.zoomCam = (delta) => {
+  camera.position.z = Math.max(0.55, Math.min(4.5, camera.position.z + delta));
+};
+
+window.faceCam = () => {
+  camera.position.set(0, 1.44, 0.90);
+  controls.target.set(0, 1.42, 0);
+  controls.update();
+};
+
+window.setBg = (bg, btn) => {
+  activateBtn(btn);
+  const map = {
+    cyber: 'radial-gradient(circle at 50% 35%, #12263a 0%, #090d16 100%)',
+    sakura: 'radial-gradient(circle at 50% 45%, #26223d 0%, #141522 100%)',
+    skylounge: 'radial-gradient(circle at 50% 35%, #1e293b 0%, #0f172a 100%)',
+    omnialobby: 'radial-gradient(circle at 50% 40%, #1d1b4b 0%, #090a1a 100%)',
+    nebula: 'radial-gradient(circle at 50% 45%, #2e1065 0%, #090514 100%)',
+    miami: 'radial-gradient(circle at 50% 40%, #4c1d95 0%, #1f1135 100%)',
+    crimson: 'radial-gradient(circle at 50% 45%, #381822 0%, #14090d 100%)',
+    studio: 'radial-gradient(circle at 50% 45%, #1c1236 0%, #090d12 100%)'
+  };
+  stageWrap.style.background = map[bg] || map.studio;
+};
+
+window.setFx = (fx, btn) => {
+  activateBtn(btn);
+  const colors = { petals: 0xf472b6, embers: 0xf97316, bubbles: 0x38bdf8, sparks: 0xfde047, lasers: 0xa855f7, motes: 0xfef08a };
+  particleMat.color.setHex(colors[fx] || 0xfef08a);
+};
+
+function setFingerTarget(side, finger, curl, spread = 0, t = 0, motionAmp = 0.06) {
+  const dir = side === 'Left' ? 1 : -1;
+  const idx = FINGERS.indexOf(finger);
+  const wave = Math.sin(t * 2.8 + idx * 0.85) * motionAmp;
+  const splayWave = Math.cos(t * 2.1 + idx * 0.6) * (motionAmp * 0.45);
+  const c = curl + wave;
+  const s = spread + splayWave;
+
+  if (finger === 'Thumb') {
+    setTarget(`${side}ThumbProximal`, 0.18 * c, dir * s, dir * (c * 0.45));
+    setTarget(`${side}ThumbIntermediate`, 0.10 * c, 0, dir * (c * 0.55));
+    setTarget(`${side}ThumbDistal`, 0.05 * c, 0, dir * (c * 0.50));
+  } else {
+    setTarget(`${side}${finger}Proximal`, 0, dir * s, dir * (c * 0.85));
+    setTarget(`${side}${finger}Intermediate`, 0, 0, dir * (c * 0.95));
+    setTarget(`${side}${finger}Distal`, 0, 0, dir * (c * 0.70));
+  }
+}
+
+function updateTargets(t) {
+  const breathe = Math.sin(t * 1.9) * 0.045;
+  const armSway = Math.cos(t * 1.5) * 0.04;
+  const wristRock = Math.sin(t * 2.4) * 0.08;
+
+  ['Left', 'Right'].forEach(side => {
+    const dir = side === 'Left' ? 1 : -1;
+    setFingerTarget(side, 'Thumb', 0.36, -0.14, t, 0.05);
+    setFingerTarget(side, 'Index', 0.22, -0.03, t, 0.06);
+    setFingerTarget(side, 'Middle', 0.34, 0.00, t, 0.07);
+    setFingerTarget(side, 'Ring', 0.44, 0.03, t, 0.07);
+    setFingerTarget(side, 'Little', 0.52, 0.06, t, 0.08);
+
+    setTarget(`${side}Shoulder`, 0, 0, dir * (0.04 + breathe * 0.4));
+    setTarget(`${side}UpperArm`, 0.06 + breathe, armSway, dir * (-1.18 + breathe));
+    setTarget(`${side}LowerArm`, 0, dir * (0.24 + breathe), dir * (-0.18 - armSway));
+    setTarget(`${side}Hand`, wristRock * 0.4, 0, dir * (0.06 + wristRock * 0.5));
+  });
+
+  setTarget('Spine', breathe * 0.35, 0, 0);
+  setTarget('Head', Math.sin(t * 1.1) * 0.03, Math.cos(t * 0.9) * 0.04, 0);
+
+  const g = currentHand;
+  if (g === 'crossedArms') {
+    ['Thumb', 'Index', 'Middle', 'Ring', 'Little'].forEach((f, i) => setFingerTarget('Left', f, 0.45 + i * 0.06, 0, t, 0.04));
+    setTarget('LeftShoulder', 0.06, 0.14, 0.06 + breathe * 0.3);
+    setTarget('LeftUpperArm', -0.42 + breathe * 0.5, 0.58, -0.62);
+    setTarget('LeftLowerArm', 0.10, 1.88, -0.32);
+    setTarget('LeftHand', 0.05, -0.25, -0.15);
+
+    const tap1 = Math.sin(t * 3.2) * 0.09;
+    const tap2 = Math.sin(t * 3.2 - 0.5) * 0.10;
+    const tap3 = Math.sin(t * 3.2 - 1.0) * 0.11;
+    const tap4 = Math.sin(t * 3.2 - 1.5) * 0.12;
+    setFingerTarget('Right', 'Thumb', 0.35, -0.22, t, 0.04);
+    setFingerTarget('Right', 'Index', 0.28 + tap1, 0.12, t, 0.05);
+    setFingerTarget('Right', 'Middle', 0.34 + tap2, 0.04, t, 0.05);
+    setFingerTarget('Right', 'Ring', 0.40 + tap3, -0.04, t, 0.05);
+    setFingerTarget('Right', 'Little', 0.46 + tap4, -0.12, t, 0.05);
+
+    setTarget('RightShoulder', 0.08, -0.16, -0.08 - breathe * 0.3);
+    setTarget('RightUpperArm', -0.52 + breathe * 0.6, -0.64, 0.58);
+    setTarget('RightLowerArm', -0.12, -1.92, 0.36);
+    setTarget('RightHand', 0.12 + wristRock * 0.3, 0.35, 0.18);
+  } else if (g === 'peace') {
+    const scissor = Math.sin(t * 3.4) * 0.06;
+    setFingerTarget('Left', 'Ring', 1.50, 0, t, 0.03);
+    setFingerTarget('Left', 'Little', 1.54, 0, t, 0.03);
+    setFingerTarget('Left', 'Thumb', 1.05, -0.32, t, 0.03);
+    setFingerTarget('Left', 'Index', -0.06, 0.22 + scissor, t, 0.04);
+    setFingerTarget('Left', 'Middle', -0.06, -0.22 - scissor, t, 0.04);
+    setTarget('LeftUpperArm', -0.35 + breathe, 0.25 + armSway, -0.55);
+    setTarget('LeftLowerArm', 0, 1.55 + breathe * 1.4, -0.45);
+    setTarget('LeftHand', 0.08 + wristRock * 0.8, -1.35, 0.12 + armSway * 1.5);
+  } else if (g === 'hips') {
+    ['Left', 'Right'].forEach(side => {
+      const dir = side === 'Left' ? 1 : -1;
+      FINGERS.forEach((f, i) => setFingerTarget(side, f, 0.45 + i * 0.05, 0, t, 0.04));
+      setTarget(`${side}UpperArm`, 0.15 + breathe, dir * -0.35, dir * -0.78);
+      setTarget(`${side}LowerArm`, 0, dir * 1.45, dir * -0.35);
+      setTarget(`${side}Hand`, 0, 0, dir * -0.45);
+    });
+  }
+
+  if (currentStance === 'sprint') {
+    const run = Math.sin(t * 8.0);
+    setTarget('Spine', 0.18, run * 0.12, 0);
+    setTarget('LeftUpperLeg', run * 0.75, 0, 0);
+    setTarget('RightUpperLeg', -run * 0.75, 0, 0);
+    setTarget('LeftUpperArm', -run * 0.65, 0, -1.05);
+    setTarget('RightUpperArm', run * 0.65, 0, 1.05);
+  } else if (currentStance === 'arcade') {
+    setTarget('LeftUpperArm', -0.55, 0.3, 0.45);
+    setTarget('LeftLowerArm', 0, 1.65, 0.35);
+  }
+}
+
+function applyPoseAndExpressions(dt, t) {
+  if (!currentVrm) return;
+  const speed = Math.min(1, dt * 10);
+
+  for (const [boneName, rot] of Object.entries(targetRot)) {
+    const formattedName = boneName.charAt(0).toLowerCase() + boneName.slice(1);
+    const bone = currentVrm.humanoid.getNormalizedBoneNode(formattedName) || currentVrm.humanoid.getNormalizedBoneNode(boneName);
     
- <button class="pose-btn active" onclick="setFx('motes', this)">☀️ Solaris Mirage (Motes)</button>
-      </div>
-    </div>
-  </div>
-</div>
+    if (!bone) continue;
+    bone.rotation.x = THREE.MathUtils.lerp(bone.rotation.x, rot.x, speed);
+    bone.rotation.y = THREE.MathUtils.lerp(bone.rotation.y, rot.y, speed);
+    bone.rotation.z = THREE.MathUtils.lerp(bone.rotation.z, rot.z, speed);
+  }
 
-<script type="module" src="script.js"></script>
-</body>
-</html>
+  if (currentVrm.expressionManager) {
+    ['happy', 'angry', 'sad', 'relaxed', 'surprised', 'oh'].forEach(k => {
+      currentVrm.expressionManager.setValue(k, 0);
+    });
+    
+    if (currentExpr === 'happy' || currentExpr === 'smug') {
+      currentVrm.expressionManager.setValue('happy', currentExpr === 'smug' ? 0.55 : 1.0);
+    }
+    if (currentExpr === 'oh') currentVrm.expressionManager.setValue('oh', 0.85);
+    if (currentExpr === 'sad' || currentExpr === 'sorrow') currentVrm.expressionManager.setValue('sad', 1.0);
+    if (currentExpr === 'angry' || currentExpr === 'furious') currentVrm.expressionManager.setValue('angry', 1.0);
+    if (currentExpr === 'surprised' || currentExpr === 'shocked') currentVrm.expressionManager.setValue('surprised', 1.0);
+    if (currentExpr === 'relaxed') currentVrm.expressionManager.setValue('relaxed', 1.0);
+    if (currentExpr === 'wink') currentVrm.expressionManager.setValue('blinkLeft', 1.0);
+  }
 
+  if (currentStance === 'float' || currentStance === 'holo' || currentStance === 'domain') {
+    const targetY = 0.14 + Math.sin(t * 2.4) * 0.05;
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
+  } else if (currentStance === 'skyleap') {
+    const targetY = 0.28 + Math.sin(t * 2.4) * 0.05;
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
+  } else if (currentStance === 'vortex') {
+    currentVrm.scene.rotation.y += dt * 3.2;
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, 0, speed);
+  } else {
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, 0, speed);
+  }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const t = clock.elapsedTime;
+
+  if (!isPaused && currentVrm) {
+    updateTargets(t);
+    applyPoseAndExpressions(dt, t);
+
+    particles.forEach(p => {
+      p.mesh.position.y -= p.speed * dt;
+      p.mesh.position.x += p.drift * dt;
+      if (p.mesh.position.y < 0) p.mesh.position.y = 2.8;
+    });
+  }
+
+  if (currentVrm) currentVrm.update(dt);
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = stageWrap.clientWidth / stageWrap.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(stageWrap.clientWidth, stageWrap.clientHeight);
+});
