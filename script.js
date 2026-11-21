@@ -86,6 +86,41 @@ function makeFxTexture(kind) {
     g.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = g;
     ctx.fillRect(44, 0, 40, 128);
+  } else if (kind === 'snow') {
+    const g = ctx.createRadialGradient(64, 64, 2, 64, 64, 60);
+    g.addColorStop(0, 'rgba(255,255,255,1)');
+    g.addColorStop(0.4, 'rgba(240,248,255,0.85)');
+    g.addColorStop(1, 'rgba(220,240,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(64, 64, 60, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (kind === 'rain') {
+    const g = ctx.createLinearGradient(0, 8, 0, 120);
+    g.addColorStop(0, 'rgba(255,255,255,0)');
+    g.addColorStop(0.5, 'rgba(255,255,255,0.95)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(59, 8, 10, 112);
+  } else if (kind === 'confetti') {
+    const cols = ['#ff2e88', '#ffc83b', '#00e5ff'];
+    cols.forEach((col, i) => {
+      ctx.save();
+      ctx.translate(34 + i * 28, 44 + (i % 2) * 34);
+      ctx.rotate(0.6 + i * 0.7);
+      ctx.fillStyle = col;
+      ctx.fillRect(-13, -6, 26, 12);
+      ctx.restore();
+    });
+  } else if (kind === 'heart') {
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(64, 112);
+    ctx.bezierCurveTo(10, 72, 16, 18, 46, 18);
+    ctx.bezierCurveTo(58, 18, 64, 28, 64, 36);
+    ctx.bezierCurveTo(64, 28, 70, 18, 82, 18);
+    ctx.bezierCurveTo(112, 18, 118, 72, 64, 112);
+    ctx.fill();
   } else { // soft glow dot (embers + motes)
     const g = ctx.createRadialGradient(64, 64, 2, 64, 64, 62);
     g.addColorStop(0, 'rgba(255,255,255,1)');
@@ -105,7 +140,13 @@ const FX_CONF = {
   bubbles: { tex: 'bubble', color: 0xffffff, size: 0.13,  count: 55, blending: THREE.NormalBlending },
   sparks:  { tex: 'star',   color: 0xffe066, size: 0.07,  count: 80, blending: THREE.AdditiveBlending },
   lasers:  { tex: 'laser',  color: 0xc084fc, size: 0.30,  count: 42, blending: THREE.AdditiveBlending },
-  motes:   { tex: 'glow',   color: 0xfef08a, size: 0.04,  count: 90, blending: THREE.AdditiveBlending }
+  motes:   { tex: 'glow',   color: 0xfef08a, size: 0.04,  count: 90, blending: THREE.AdditiveBlending },
+  snow:    { tex: 'snow',   color: 0xffffff, size: 0.075, count: 240, blending: THREE.NormalBlending },
+  pixie:   { tex: 'star',   color: 0xffa6e8, size: 0.05,  count: 130, blending: THREE.AdditiveBlending },
+  rain:    { tex: 'rain',   color: 0x9fd8ff, size: 0.16,  count: 300, blending: THREE.NormalBlending },
+  fireflies: { tex: 'glow', color: 0xa3ff5e, size: 0.045, count: 80, blending: THREE.AdditiveBlending },
+  confetti: { tex: 'confetti', color: 0xffffff, size: 0.06, count: 170, blending: THREE.NormalBlending },
+  hearts:  { tex: 'heart',  color: 0xff5e8a, size: 0.085, count: 70, blending: THREE.NormalBlending }
 };
 
 function buildParticles(fx) {
@@ -164,6 +205,35 @@ function updateParticles(dt, t) {
       y -= dt * 2.4 * sd.s;
       x -= dt * 1.1 * sd.s;
       if (y < 0 || x < -2.4) { y = 3.0 + Math.random() * 0.5; x = (Math.random() - 0.1) * 4.2; }
+    } else if (currentFx === 'snow') {      // snowfall: fall slow, swaying
+      y -= dt * 0.35 * sd.s;
+      x += Math.sin(t * 1.1 + sd.p) * dt * 0.30;
+      z += Math.cos(t * 0.9 + sd.p) * dt * 0.08;
+      if (y < 0) { y = 3.0; x = (Math.random() - 0.5) * 4.2; }
+    } else if (currentFx === 'pixie') {     // pixie dust: swirl upward, twinkling
+      y += dt * 0.12 * sd.s;
+      x += Math.sin(t * 2.2 + sd.p) * dt * 0.25;
+      z += Math.cos(t * 1.8 + sd.p) * dt * 0.25;
+      if (y > 3.0) { y = 0.05; x = (Math.random() - 0.5) * 4.2; }
+    } else if (currentFx === 'rain') {      // neon rain: fast straight fall
+      y -= dt * 2.8 * sd.s;
+      x -= dt * 0.35 * sd.s;
+      if (y < 0) { y = 3.0; x = (Math.random() - 0.5) * 4.2; }
+    } else if (currentFx === 'fireflies') { // fireflies: slow wandering glow
+      y += Math.sin(t * 0.9 + sd.p) * dt * 0.10;
+      x += Math.cos(t * 0.6 + sd.p) * dt * 0.15;
+      z += Math.sin(t * 0.5 + sd.p) * dt * 0.10;
+      if (y > 2.9) y = 2.85;
+      if (y < 0.1) y = 0.15;
+    } else if (currentFx === 'confetti') {  // confetti: flutter down
+      y -= dt * 0.55 * sd.s;
+      x += Math.sin(t * 6.0 + sd.p) * dt * 0.45;
+      z += Math.cos(t * 5.0 + sd.p) * dt * 0.20;
+      if (y < 0) { y = 3.0; x = (Math.random() - 0.5) * 4.2; }
+    } else if (currentFx === 'hearts') {    // hearts: float up, swaying
+      y += dt * 0.28 * sd.s;
+      x += Math.sin(t * 1.7 + sd.p) * dt * 0.22;
+      if (y > 3.0) { y = 0.02; x = (Math.random() - 0.5) * 4.2; }
     } else {                                 // motes: slow golden dust drift
       y += Math.sin(t * 0.7 + sd.p) * dt * 0.05 + dt * 0.02;
       x += Math.cos(t * 0.5 + sd.p) * dt * 0.06;
@@ -174,6 +244,8 @@ function updateParticles(dt, t) {
   }
   particleSystem.geometry.attributes.position.needsUpdate = true;
   if (currentFx === 'embers') particleSystem.material.opacity = 0.65 + Math.sin(t * 9.0) * 0.25;
+  if (currentFx === 'pixie') particleSystem.material.opacity = 0.55 + Math.sin(t * 5.0) * 0.30;
+  if (currentFx === 'fireflies') particleSystem.material.opacity = 0.60 + Math.sin(t * 2.6) * 0.30;
 }
 
 buildParticles('motes');
@@ -185,6 +257,7 @@ let currentStance = 'none';
 let isPaused = false;
 let modelFlipped = false;
 let crownGroup = null;
+let crownOrbit = null;
 let crownVisible = true;
 const clock = new THREE.Clock();
 const FINGERS = ['Thumb', 'Index', 'Middle', 'Ring', 'Little'];
@@ -197,55 +270,74 @@ function setTarget(boneName, x, y, z) {
 function attachCrown(vrm) {
   if (crownGroup && crownGroup.parent) crownGroup.parent.remove(crownGroup);
   crownGroup = new THREE.Group();
+  crownOrbit = null;
 
   const goldMat = new THREE.MeshStandardMaterial({ color: 0xffc83b, metalness: 0.92, roughness: 0.18 });
-  const darkGoldMat = new THREE.MeshStandardMaterial({ color: 0xb88214, metalness: 0.88, roughness: 0.28 });
-  const gemColors = [0xff1744, 0x00e5ff, 0x2979ff, 0xff1744, 0x00e5ff, 0x2979ff, 0xff1744, 0x2979ff];
+  const chromeMat = new THREE.MeshStandardMaterial({ color: 0x17171f, metalness: 0.95, roughness: 0.25 });
+  const pinkGemMat = new THREE.MeshStandardMaterial({ color: 0xff2e88, emissive: 0xff2e88, emissiveIntensity: 0.85, roughness: 0.1 });
+  const goldGemMat = new THREE.MeshStandardMaterial({ color: 0xffc83b, emissive: 0xff9d00, emissiveIntensity: 0.5, roughness: 0.1 });
+  const cyanGemMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x00e5ff, emissiveIntensity: 0.55, roughness: 0.1 });
 
-  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.108, 0.102, 0.026, 32, 1, true), goldMat);
+  // Black-chrome band with gold rims: the dark legendary base
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.110, 0.104, 0.030, 32, 1, true), chromeMat);
   band.material.side = THREE.DoubleSide;
   crownGroup.add(band);
 
-  const rimTop = new THREE.Mesh(new THREE.TorusGeometry(0.108, 0.0035, 10, 36), darkGoldMat);
+  const rimTop = new THREE.Mesh(new THREE.TorusGeometry(0.110, 0.0038, 10, 36), goldMat);
   rimTop.rotation.x = Math.PI / 2;
-  rimTop.position.y = 0.013;
+  rimTop.position.y = 0.015;
   crownGroup.add(rimTop);
-
   const rimBot = rimTop.clone();
-  rimBot.position.y = -0.013;
+  rimBot.position.y = -0.015;
   crownGroup.add(rimBot);
 
+  // The Slash: a glowing Omnia-pink katana-slash gem across the front of the band
+  const slash = new THREE.Mesh(new THREE.OctahedronGeometry(0.016, 0), pinkGemMat);
+  slash.scale.set(0.32, 1.9, 0.45);
+  slash.rotation.z = 0.65;
+  slash.position.set(0, 0, 0.108);
+  crownGroup.add(slash);
+
+  // Gold spires with glowing orb tips; the front-center spire stands tallest
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
     const isFront = i === 0;
     const isMain = i % 2 === 0;
-    const h = isFront ? 0.068 : (isMain ? 0.050 : 0.034);
-
-    const spireHolder = new THREE.Group();
-    spireHolder.rotation.y = angle;
-
-    const spire = new THREE.Mesh(new THREE.ConeGeometry(isFront ? 0.018 : 0.013, h, 4), goldMat);
-    spire.position.set(0, 0.013 + h / 2, 0.106);
-    spire.rotation.x = -0.14;
-    spireHolder.add(spire);
-
-    const finial = new THREE.Mesh(
-      new THREE.OctahedronGeometry(isFront ? 0.0085 : 0.0055, 0),
-      new THREE.MeshStandardMaterial({ color: gemColors[i], emissive: gemColors[i], emissiveIntensity: 0.45, roughness: 0.1 })
-    );
-    finial.position.set(0, 0.013 + h + 0.010, 0.114);
-    spireHolder.add(finial);
-
-    const gem = new THREE.Mesh(
-      new THREE.OctahedronGeometry(isFront ? 0.010 : 0.0065, 1),
-      new THREE.MeshStandardMaterial({ color: gemColors[i], emissive: gemColors[i], emissiveIntensity: 0.35, roughness: 0.15 })
-    );
-    gem.scale.set(1, 1, 0.55);
-    gem.position.set(0, 0, 0.109);
-    spireHolder.add(gem);
-
-    crownGroup.add(spireHolder);
+    const h = isFront ? 0.088 : (isMain ? 0.058 : 0.038);
+    const holder = new THREE.Group();
+    holder.rotation.y = angle;
+    const spire = new THREE.Mesh(new THREE.ConeGeometry(isFront ? 0.017 : 0.012, h, 4), goldMat);
+    spire.position.set(0, 0.015 + h / 2, 0.107);
+    spire.rotation.x = -0.13;
+    holder.add(spire);
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(isFront ? 0.0075 : 0.0052, 12, 10), isFront ? pinkGemMat : goldGemMat);
+    orb.position.set(0, 0.015 + h + 0.006, 0.112);
+    holder.add(orb);
+    crownGroup.add(holder);
   }
+
+  // The crown jewel: a big Omnia-pink diamond at the front peak
+  const jewel = new THREE.Mesh(new THREE.OctahedronGeometry(0.0155, 0), pinkGemMat);
+  jewel.scale.set(1, 1.35, 1);
+  jewel.position.set(0, 0.128, 0.115);
+  crownGroup.add(jewel);
+
+  // Halo orbit: three gems circle the crown on a tilted gold ring
+  const tilt = new THREE.Group();
+  tilt.rotation.x = 0.30;
+  tilt.position.y = 0.055;
+  crownOrbit = new THREE.Group();
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.148, 0.0016, 8, 48), goldMat);
+  ring.rotation.x = Math.PI / 2;
+  crownOrbit.add(ring);
+  [pinkGemMat, goldGemMat, cyanGemMat].forEach((m, i) => {
+    const a = (i / 3) * Math.PI * 2;
+    const g = new THREE.Mesh(new THREE.OctahedronGeometry(0.0075, 0), m);
+    g.position.set(Math.cos(a) * 0.148, 0, Math.sin(a) * 0.148);
+    crownOrbit.add(g);
+  });
+  tilt.add(crownOrbit);
+  crownGroup.add(tilt);
 
   const headBone = vrm.humanoid.getNormalizedBoneNode('head');
   if (headBone) {
@@ -364,7 +456,7 @@ function setFingerTarget(side, finger, curl, spread = 0, t = 0, motionAmp = 0.06
 }
 
 // Set all five fingers of one hand at once. curls/spreads order: [Thumb, Index, Middle, Ring, Little]
-function poseFingers(side, curls, spreads, t, amp = 0.03) {
+function poseFingers(side, curls, spreads, t, amp = 0.012) {
   FINGERS.forEach((f, i) => setFingerTarget(side, f, curls[i], spreads ? spreads[i] : 0, t, amp));
 }
 
@@ -416,12 +508,12 @@ function updateTargets(t) {
     const scissor = Math.sin(t * 3.4) * 0.06;
     setFingerTarget('Left', 'Ring', 1.50, 0, t, 0.03);
     setFingerTarget('Left', 'Little', 1.54, 0, t, 0.03);
-    setFingerTarget('Left', 'Thumb', 1.05, -0.32, t, 0.03);
+    setFingerTarget('Left', 'Thumb', 1.30, -0.40, t, 0.03);
     setFingerTarget('Left', 'Index', -0.06, 0.22 + scissor, t, 0.04);
     setFingerTarget('Left', 'Middle', -0.06, -0.22 - scissor, t, 0.04);
     setTarget('LeftUpperArm', -0.75 + breathe, 0.15 + armSway, -0.30);
     setTarget('LeftLowerArm', 0, -2.05 - breathe * 1.2, -0.10);
-    setTarget('LeftHand', 0.08 + wristRock * 0.8, 0, 0.10 + armSway * 1.5);
+    setTarget('LeftHand', 0.08 + wristRock * 0.8, -0.50, 0.10 + armSway * 1.5);
   } else if (g === 'hips') {
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
@@ -432,10 +524,10 @@ function updateTargets(t) {
     });
   } else if (g === 'kheart') {
     // Korean finger heart: right hand up by her chin, thumb + index tips crossed, rest curled
-    poseFingers('Right', [0.85, 0.55, 1.45, 1.50, 1.52], [-0.30, 0.30, 0, 0, 0], t);
+    poseFingers('Right', [1.00, 0.75, 1.45, 1.50, 1.52], [-0.45, 0.45, 0, 0, 0], t);
     setTarget('RightUpperArm', -0.65 + breathe, -0.15, 0.42);
     setTarget('RightLowerArm', 0, 2.05, 0.60);
-    setTarget('RightHand', 0, 0, 0);
+    setTarget('RightHand', 0, 0.75, 0);
   } else if (g === 'rock') {
     // Rock on: both hands up, index + pinky out, middle + ring held down by the thumb
     ['Left', 'Right'].forEach(side => {
@@ -443,7 +535,7 @@ function updateTargets(t) {
       poseFingers(side, [0.95, -0.05, 1.50, 1.52, -0.05], [0, 0.10, 0, 0, -0.10], t);
       setTarget(`${side}UpperArm`, -0.35 + breathe, dir * 0.20, dir * -0.55);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.10);
-      setTarget(`${side}Hand`, 0, 0, 0);
+      setTarget(`${side}Hand`, 0, dir * -1.0, 0);
     });
   } else if (g === 'omniaSign') {
     // Omnia Prism: both hands up in front of her face, index + thumb tips meeting into a triangle
@@ -452,7 +544,7 @@ function updateTargets(t) {
       poseFingers(side, [0.15, -0.05, 1.45, 1.50, 1.52], [dir * -0.35, dir * 0.35, 0, 0, 0], t);
       setTarget(`${side}UpperArm`, -0.60 + breathe, dir * -0.45, dir * -0.40);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.55);
-      setTarget(`${side}Hand`, 0, 0, 0);
+      setTarget(`${side}Hand`, 0, dir * -0.5, 0);
     });
   } else if (g === 'bird' || g === 'rebel2') {
     // Middle finger: one hand, or both for Double
@@ -462,14 +554,14 @@ function updateTargets(t) {
       poseFingers(side, [1.30, 1.45, -0.06, 1.48, 1.50], [0, 0, 0, 0, 0], t);
       setTarget(`${side}UpperArm`, -0.55 + breathe, dir * 0.10, dir * -0.50);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.30);
-      setTarget(`${side}Hand`, 0, 0, 0);
+      setTarget(`${side}Hand`, 0, dir * -0.75, 0);
     });
   } else if (g === 'westside') {
     // West Coast W: middle + ring up and split wide, index + pinky folded under the thumb
     poseFingers('Right', [1.25, 1.45, -0.05, -0.05, 1.45], [0, 0, -0.38, 0.38, 0], t);
     setTarget('RightUpperArm', -0.55 + breathe, -0.10, 0.60);
     setTarget('RightLowerArm', 0, 1.95, 0.35);
-    setTarget('RightHand', 0, 0, 0);
+    setTarget('RightHand', 0, 0.75, 0);
   } else if (g === 'vulcan') {
     // Vulcan salute: palm up, fingers split down the middle
     ['Left', 'Right'].forEach(side => {
@@ -477,14 +569,14 @@ function updateTargets(t) {
       poseFingers(side, [0.25, -0.04, -0.04, -0.04, -0.04], [-0.30, -0.22, -0.10, 0.24, 0.36], t);
       setTarget(`${side}UpperArm`, -0.70 + breathe, dir * 0.15, dir * -0.32);
       setTarget(`${side}LowerArm`, 0, dir * -2.00, dir * -0.10);
-      setTarget(`${side}Hand`, 0, 0, 0);
+      setTarget(`${side}Hand`, 0, dir * -0.5, 0);
     });
   } else if (g === 'shaka') {
     // Shaka: thumb + pinky out, hand up by her ear like a phone
     poseFingers('Right', [-0.05, 1.48, 1.50, 1.50, -0.05], [-0.35, 0, 0, 0, 0.35], t);
     setTarget('RightUpperArm', -0.15 + breathe, -0.55, 1.05);
     setTarget('RightLowerArm', 0, 2.50, 0.20);
-    setTarget('RightHand', 0, 0, 0);
+    setTarget('RightHand', 0, 0.50, 0);
   } else if (g === 'gangster') {
     // Gangster lean: whole body tilted, chin up, one arm hanging low and loose
     setTarget('Spine', 0.06, 0, 0.20);
@@ -540,35 +632,51 @@ function updateTargets(t) {
     setTarget('LeftUpperArm', -0.10, 0.20, 1.55);
     setTarget('LeftLowerArm', 0, -0.35, 0.10);
     setTarget('Head', -0.10, 0, 0);
+  } else if (currentStance === 'dance') {
+    const targetY = Math.abs(Math.sin(t * 4.6)) * 0.05;
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
+  } else if (currentStance === 'airguitar') {
+    const targetY = Math.abs(Math.sin(t * 4.5)) * 0.035;
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
+  } else if (currentStance === 'powerup') {
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, -0.07, speed);
   } else if (currentStance === 'dash') {
-    // Cyber-dash: leaned hard forward, arms swept back, legs driving
-    const run = Math.sin(t * 10.0);
-    setTarget('Spine', 0.34, run * 0.06, 0);
-    setTarget('Head', -0.18, 0, 0);
-    setTarget('LeftUpperLeg', run * 0.60, 0, 0);
-    setTarget('RightUpperLeg', -run * 0.60, 0, 0);
-    setTarget('LeftLowerLeg', Math.max(0, run) * 0.80, 0, 0);
-    setTarget('RightLowerLeg', Math.max(0, -run) * 0.80, 0, 0);
-    setTarget('LeftUpperArm', 0.65, 0, -0.85);
-    setTarget('RightUpperArm', 0.65, 0, 0.85);
+    // Cyber-dash: pitched hard into the run, arms trailing behind, legs driving
+    const run = Math.sin(t * 10.5);
+    setTarget('Spine', 0.52, run * 0.05, 0);
+    setTarget('Chest', 0.18, 0, 0);
+    setTarget('Head', -0.38, 0, 0);
+    setTarget('LeftUpperLeg', -0.10 + run * 0.85, 0, 0);
+    setTarget('RightUpperLeg', -0.10 - run * 0.85, 0, 0);
+    setTarget('LeftLowerLeg', 0.12 + Math.max(0, run) * 1.30, 0, 0);
+    setTarget('RightLowerLeg', 0.12 + Math.max(0, -run) * 1.30, 0, 0);
+    poseFingers('Left', [1.10, 1.15, 1.17, 1.19, 1.21], [0, 0, 0, 0, 0], t);
+    poseFingers('Right', [1.10, 1.15, 1.17, 1.19, 1.21], [0, 0, 0, 0, 0], t);
+    setTarget('LeftUpperArm', 0.80, 0, -0.55);
+    setTarget('RightUpperArm', 0.80, 0, 0.55);
+    setTarget('LeftLowerArm', 0, -0.30, -0.10);
+    setTarget('RightLowerArm', 0, 0.30, 0.10);
   } else if (currentStance === 'dj') {
     // Beat-drop DJ: hands clamped on her headphones, head bobbing to the beat
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
       poseFingers(side, [0.90, 0.93, 0.95, 0.97, 0.99], [0, 0, 0, 0, 0], t);
-      setTarget(`${side}UpperArm`, -0.15, dir * 0.55, dir * -1.05);
-      setTarget(`${side}LowerArm`, 0, dir * -2.50, dir * -0.20);
+      setTarget(`${side}UpperArm`, -0.30, dir * 0.45, dir * -1.35);
+      setTarget(`${side}LowerArm`, 0, dir * -2.60, dir * -0.10);
       setTarget(`${side}Hand`, 0, 0, 0);
     });
     setTarget('Spine', 0.10, Math.sin(t * 2.3) * 0.08, 0);
     setTarget('Head', 0.12, Math.sin(t * 2.3) * 0.15, 0);
   } else if (currentStance === 'stargazer') {
-    // Star-gazer: head tilted to the sky, one arm reaching up and pointing
-    setTarget('Head', -0.42, 0, 0);
-    setTarget('Spine', -0.08, 0, 0);
-    setTarget('RightUpperArm', -0.15, -0.10, -2.05);
-    setTarget('RightLowerArm', 0, 0.20, -0.05);
-    poseFingers('Right', [0.20, -0.05, 0.50, 0.70, 0.80], [0, 0, 0, 0, 0], t);
+    // Star-gazer: body arched back, face to the sky, BOTH arms reaching up for the stars
+    setTarget('Head', -0.55, 0, 0);
+    setTarget('Spine', -0.12, 0, 0);
+    setTarget('RightUpperArm', -0.30, -0.10, -2.00);
+    setTarget('RightLowerArm', 0, 0.15, -0.10);
+    setTarget('LeftUpperArm', -0.20, 0.30, 1.05);
+    setTarget('LeftLowerArm', 0, -0.25, 0.15);
+    poseFingers('Right', [0.55, -0.08, -0.08, -0.08, -0.08], [-0.30, -0.25, -0.10, 0.15, 0.30], t);
+    poseFingers('Left', [0.55, -0.08, -0.08, -0.08, -0.08], [-0.30, -0.25, -0.10, 0.15, 0.30], t);
   } else if (currentStance === 'domain') {
     // Domain seal: forearms crossed in front of her chest, fingers curled into the seal
     ['Left', 'Right'].forEach(side => {
@@ -581,13 +689,13 @@ function updateTargets(t) {
   } else if (currentStance === 'float') {
     // Zero-G float: limbs drift loose and weightless while she hovers
     setTarget('Head', -0.06, Math.sin(t * 0.7) * 0.05, 0);
-    setTarget('LeftUpperLeg', 0.10, 0, 0.03);
-    setTarget('RightUpperLeg', 0.16, 0, -0.03);
-    setTarget('LeftLowerLeg', 0.30, 0, 0);
-    setTarget('RightLowerLeg', 0.22, 0, 0);
+    setTarget('LeftUpperLeg', -0.08, 0, 0.04);
+    setTarget('RightUpperLeg', -0.02, 0, -0.04);
+    setTarget('LeftLowerLeg', 0.38, 0, 0);
+    setTarget('RightLowerLeg', 0.30, 0, 0);
     if (currentHand === 'relaxed') {
-      setTarget('LeftUpperArm', 0.10, 0, -0.82);
-      setTarget('RightUpperArm', 0.10, 0, 0.82);
+      setTarget('LeftUpperArm', 0.05, 0, -0.55);
+      setTarget('RightUpperArm', 0.05, 0, 0.55);
       setTarget('LeftLowerArm', 0, -0.35, -0.10);
       setTarget('RightLowerArm', 0, 0.35, 0.10);
     }
@@ -595,6 +703,84 @@ function updateTargets(t) {
     // Holo-stream: slow dreamy sway while she floats
     setTarget('Spine', breathe * 0.5, Math.sin(t * 0.8) * 0.10, 0);
     setTarget('Head', Math.sin(t * 0.9) * 0.04, Math.sin(t * 0.6) * 0.12, 0);
+  } else if (currentStance === 'dance') {
+    // Idol dance: arms wave overhead in turns, hips sway, knees bounce soft
+    const w = Math.sin(t * 4.6);
+    setTarget('Spine', 0.08, 0, w * 0.07);
+    setTarget('Head', 0.05, 0, w * 0.10);
+    setTarget('LeftUpperArm', -0.15, 0, 0.95 + w * 0.38);
+    setTarget('RightUpperArm', -0.15, 0, -0.95 + w * 0.38);
+    setTarget('LeftLowerArm', 0, -0.55 - w * 0.25, -0.15);
+    setTarget('RightLowerArm', 0, 0.55 - w * 0.25, 0.15);
+    setTarget('LeftUpperLeg', -0.06 - w * 0.05, 0, 0.03);
+    setTarget('RightUpperLeg', -0.06 + w * 0.05, 0, -0.03);
+    setTarget('LeftLowerLeg', 0.10 + Math.max(0, w) * 0.12, 0, 0);
+    setTarget('RightLowerLeg', 0.10 + Math.max(0, -w) * 0.12, 0, 0);
+    poseFingers('Left', [0.55, 0.05, 0.05, 0.05, 0.05], [-0.25, -0.20, -0.08, 0.12, 0.25], t);
+    poseFingers('Right', [0.55, 0.05, 0.05, 0.05, 0.05], [-0.25, -0.20, -0.08, 0.12, 0.25], t);
+  } else if (currentStance === 'powerup') {
+    // Power-up charge: squats low, fists clenched at her sides, body trembling with energy
+    const shake = Math.sin(t * 42) * 0.012;
+    setTarget('Spine', 0.30 + shake, 0, 0);
+    setTarget('Head', 0.22, 0, 0);
+    setTarget('LeftUpperLeg', -0.38, 0, 0.06);
+    setTarget('RightUpperLeg', -0.38, 0, -0.06);
+    setTarget('LeftLowerLeg', 0.55, 0, 0);
+    setTarget('RightLowerLeg', 0.55, 0, 0);
+    ['Left', 'Right'].forEach(side => {
+      const dir = side === 'Left' ? 1 : -1;
+      poseFingers(side, [1.20, 1.50, 1.52, 1.54, 1.56], [0, 0, 0, 0, 0], t);
+      setTarget(`${side}UpperArm`, 0.32, 0, dir * -1.32);
+      setTarget(`${side}LowerArm`, 0, dir * -0.55, dir * -0.30);
+      setTarget(`${side}Hand`, 0, 0, 0);
+    });
+  } else if (currentStance === 'dab') {
+    // The dab: one arm slashes across her face, the other flings out, head tucked in
+    setTarget('RightUpperArm', -1.05, -0.55, 0.95);
+    setTarget('RightLowerArm', 0, 2.45, 0.95);
+    setTarget('RightHand', 0, 0, 0);
+    setTarget('LeftUpperArm', 0.30, 0, -1.50);
+    setTarget('LeftLowerArm', 0, -0.15, -0.10);
+    setTarget('Head', 0.38, -0.25, 0.20);
+    setTarget('Spine', 0.10, 0, 0.06);
+    poseFingers('Right', [0.70, 0.10, 0.10, 0.10, 0.10], [0, -0.10, 0, 0, 0.10], t);
+    poseFingers('Left', [0.70, 0.10, 0.10, 0.10, 0.10], [0, -0.10, 0, 0, 0.10], t);
+  } else if (currentStance === 'airguitar') {
+    // Air guitar: legs planted wide, one hand on the neck, the other strumming wild
+    const strum = Math.sin(t * 9.0);
+    setTarget('Spine', 0.14, 0, Math.sin(t * 4.5) * 0.05);
+    setTarget('Head', 0.16 + Math.sin(t * 4.5) * 0.13, 0, 0);
+    setTarget('LeftUpperLeg', -0.05, 0, 0.20);
+    setTarget('RightUpperLeg', -0.05, 0, -0.20);
+    setTarget('LeftUpperArm', -0.55, 0.20, -0.75);
+    setTarget('LeftLowerArm', 0, -0.50, -0.30);
+    setTarget('RightUpperArm', -0.25, -0.30, 0.85);
+    setTarget('RightLowerArm', 0, 1.30 + strum * 0.38, 0.55);
+    poseFingers('Left', [0.85, 0.55, 0.65, 0.75, 0.85], [0, 0, 0, 0, 0], t);
+    poseFingers('Right', [0.85, 0.30, 0.35, 0.40, 0.45], [0, 0, 0, 0, 0], t);
+  } else if (currentStance === 'blowkiss') {
+    // Blow a kiss: her hand floats to her lips, then opens toward you as she blows
+    const k = (Math.sin(t * 1.7) + 1) / 2;
+    setTarget('Head', 0.06, 0, 0.06);
+    setTarget('RightUpperArm', -0.55 - k * 0.25, -0.10, 0.55 - k * 0.25);
+    setTarget('RightLowerArm', 0, 2.35 - k * 1.20, 0.50 - k * 0.30);
+    setTarget('RightHand', 0, 0.40, 0);
+    poseFingers('Right', [0.90 - k * 0.55, 0.75 - k * 0.70, 0.95 - k * 0.90, 1.05 - k * 1.00, 1.15 - k * 1.10], [-0.15, 0.10, 0, 0, 0.10], t);
+    setTarget('LeftUpperArm', 0.06, 0, -1.18);
+    setTarget('LeftLowerArm', 0, 0.24, -0.18);
+  } else if (currentStance === 'moonwalk') {
+    // Moonwalk glide: legs scissor-slide smooth, body leaned back cool
+    const s = Math.sin(t * 2.3);
+    setTarget('Spine', -0.10, 0, 0);
+    setTarget('Head', -0.06, 0, 0.08);
+    setTarget('LeftUpperLeg', s * 0.34, 0, 0.02);
+    setTarget('RightUpperLeg', -s * 0.34, 0, -0.02);
+    setTarget('LeftLowerLeg', Math.max(0, -s) * 0.22, 0, 0);
+    setTarget('RightLowerLeg', Math.max(0, s) * 0.22, 0, 0);
+    setTarget('LeftUpperArm', 0.06 - s * 0.18, 0, -1.10);
+    setTarget('RightUpperArm', 0.06 + s * 0.18, 0, 1.10);
+    setTarget('LeftLowerArm', 0, 0.24, -0.18);
+    setTarget('RightLowerArm', 0, -0.24, 0.18);
   }
 }
 
@@ -613,7 +799,7 @@ function applyPoseAndExpressions(dt, t) {
   }
 
   if (currentVrm.expressionManager) {
-    ['happy', 'angry', 'sad', 'relaxed', 'surprised', 'oh'].forEach(k => {
+    ['happy', 'angry', 'sad', 'relaxed', 'surprised', 'oh', 'blink', 'blinkLeft', 'blinkRight'].forEach(k => {
       currentVrm.expressionManager.setValue(k, 0);
     });
 
@@ -629,10 +815,10 @@ function applyPoseAndExpressions(dt, t) {
   }
 
   if (currentStance === 'float' || currentStance === 'holo' || currentStance === 'domain') {
-    const targetY = 0.14 + Math.sin(t * 2.4) * 0.05;
+    const targetY = 0.22 + Math.sin(t * 2.4) * 0.05;
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
   } else if (currentStance === 'skyleap') {
-    const targetY = 0.28 + Math.sin(t * 2.4) * 0.05;
+    const targetY = 0.40 + Math.sin(t * 2.4) * 0.06;
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
   } else if (currentStance === 'dj') {
     const targetY = Math.abs(Math.sin(t * 4.6)) * 0.045;
@@ -645,6 +831,14 @@ function applyPoseAndExpressions(dt, t) {
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, 0, speed);
   } else {
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, 0, speed);
+  }
+
+  if (currentStance !== 'vortex') {
+    const targetRotY = modelFlipped ? Math.PI : 0;
+    let ry = currentVrm.scene.rotation.y % (Math.PI * 2);
+    if (ry > Math.PI) ry -= Math.PI * 2;
+    if (ry < -Math.PI) ry += Math.PI * 2;
+    currentVrm.scene.rotation.y = THREE.MathUtils.lerp(ry, targetRotY, speed);
   }
 }
 
@@ -661,6 +855,7 @@ function animate() {
     }
   }
 
+  if (crownOrbit && crownVisible) crownOrbit.rotation.y += dt * 0.9;
   if (currentVrm) currentVrm.update(dt);
   renderer.render(scene, camera);
 }
