@@ -103,13 +103,14 @@ function makeFxTexture(kind) {
     ctx.fillStyle = g;
     ctx.fillRect(59, 8, 10, 112);
   } else if (kind === 'confetti') {
-    const cols = ['#ff2e88', '#ffc83b', '#00e5ff'];
-    cols.forEach((col, i) => {
+    const cols = ['#ff2e88', '#ffc83b', '#00e5ff', '#a3ff5e', '#c084fc', '#ffffff'];
+    const spots = [[30, 30], [66, 22], [98, 36], [44, 66], [84, 74], [24, 98], [70, 104], [104, 92]];
+    spots.forEach((s, i) => {
       ctx.save();
-      ctx.translate(34 + i * 28, 44 + (i % 2) * 34);
-      ctx.rotate(0.6 + i * 0.7);
-      ctx.fillStyle = col;
-      ctx.fillRect(-13, -6, 26, 12);
+      ctx.translate(s[0], s[1]);
+      ctx.rotate(0.5 + i * 0.8);
+      ctx.fillStyle = cols[i % cols.length];
+      ctx.fillRect(-15, -7, 30, 14);
       ctx.restore();
     });
   } else if (kind === 'heart') {
@@ -145,7 +146,7 @@ const FX_CONF = {
   pixie:   { tex: 'star',   color: 0xffa6e8, size: 0.05,  count: 130, blending: THREE.AdditiveBlending },
   rain:    { tex: 'rain',   color: 0x9fd8ff, size: 0.16,  count: 300, blending: THREE.NormalBlending },
   fireflies: { tex: 'glow', color: 0xa3ff5e, size: 0.045, count: 80, blending: THREE.AdditiveBlending },
-  confetti: { tex: 'confetti', color: 0xffffff, size: 0.06, count: 170, blending: THREE.NormalBlending },
+  confetti: { tex: 'confetti', color: 0xffffff, size: 0.13, count: 170, blending: THREE.NormalBlending },
   hearts:  { tex: 'heart',  color: 0xff5e8a, size: 0.085, count: 70, blending: THREE.NormalBlending }
 };
 
@@ -588,18 +589,19 @@ function updateTargets(t) {
     setTarget('Spine', breathe * 0.5, Math.sin(t * 0.8) * 0.10, 0);
     setTarget('Head', Math.sin(t * 0.9) * 0.04, Math.sin(t * 0.6) * 0.12, 0);
   } else if (currentStance === 'dance') {
-    // Idol dance: arms wave overhead in turns, hips sway, knees bounce soft
-    const w = Math.sin(t * 4.6);
-    setTarget('Spine', 0.08, 0, w * 0.07);
-    setTarget('Head', 0.05, 0, w * 0.10);
-    setTarget('LeftUpperArm', -0.15, 0, 0.95 + w * 0.38);
-    setTarget('RightUpperArm', -0.15, 0, -0.95 + w * 0.38);
-    setTarget('LeftLowerArm', 0, -0.55 - w * 0.25, -0.15);
-    setTarget('RightLowerArm', 0, 0.55 - w * 0.25, 0.15);
-    setTarget('LeftUpperLeg', -0.06 - w * 0.05, 0, 0.03);
-    setTarget('RightUpperLeg', -0.06 + w * 0.05, 0, -0.03);
-    setTarget('LeftLowerLeg', 0.10 + Math.max(0, w) * 0.12, 0, 0);
-    setTarget('RightLowerLeg', 0.10 + Math.max(0, -w) * 0.12, 0, 0);
+    // Idol dance: FULL energy — arms seesaw overhead, hips pop side to side, torso twists, knees bounce hard
+    const w = Math.sin(t * 5.6);
+    setTarget('Spine', 0.10, w * 0.12, w * 0.14);
+    setTarget('Chest', 0.04, -w * 0.08, -w * 0.06);
+    setTarget('Head', 0.08, w * 0.12, w * 0.16);
+    setTarget('LeftUpperArm', -0.15, 0, 0.45 + w * 1.15);
+    setTarget('RightUpperArm', -0.15, 0, -0.45 + w * 1.15);
+    setTarget('LeftLowerArm', 0, -0.45 - w * 0.35, -0.10);
+    setTarget('RightLowerArm', 0, 0.45 - w * 0.35, 0.10);
+    setTarget('LeftUpperLeg', -0.06 - w * 0.08, 0, 0.05 + w * 0.05);
+    setTarget('RightUpperLeg', -0.06 + w * 0.08, 0, -0.05 + w * 0.05);
+    setTarget('LeftLowerLeg', 0.14 + Math.max(0, w) * 0.22, 0, 0);
+    setTarget('RightLowerLeg', 0.14 + Math.max(0, -w) * 0.22, 0, 0);
     poseFingers('Left', [0.55, 0.05, 0.05, 0.05, 0.05], [-0.25, -0.20, -0.08, 0.12, 0.25], t);
     poseFingers('Right', [0.55, 0.05, 0.05, 0.05, 0.05], [-0.25, -0.20, -0.08, 0.12, 0.25], t);
   } else if (currentStance === 'powerup') {
@@ -698,7 +700,7 @@ function updateTargets(t) {
     setFingerTarget('Left', 'Middle', -0.06, -0.22 - scissor, t, 0.04);
     setTarget('LeftUpperArm', -0.75 + breathe, 0.15 + armSway, -0.30);
     setTarget('LeftLowerArm', 0, -2.05 - breathe * 1.2, -0.10);
-    setTarget('LeftHand', 0.08 + wristRock * 0.8, -0.50, 0.10 + armSway * 1.5);
+    setTarget('LeftHand', 0.08 + wristRock * 0.8, -0.15, 0.35 + armSway * 1.5);
   } else if (g === 'hips') {
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
@@ -720,7 +722,7 @@ function updateTargets(t) {
       poseFingers(side, [0.95, -0.05, 1.50, 1.52, -0.05], [0, 0.10, 0, 0, -0.10], t);
       setTarget(`${side}UpperArm`, -0.35 + breathe, dir * 0.20, dir * -0.55);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.10);
-      setTarget(`${side}Hand`, 0, dir * -1.0, 0);
+      setTarget(`${side}Hand`, 0, dir * -0.5, dir * 0.40);
     });
   } else if (g === 'omniaSign') {
     // Omnia Prism: both hands up in front of her face, index + thumb tips meeting into a triangle
@@ -848,7 +850,7 @@ function applyPoseAndExpressions(dt, t) {
     const targetY = Math.abs(Math.sin(t * 10.0)) * 0.03;
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
   } else if (currentStance === 'dance') {
-    const targetY = Math.abs(Math.sin(t * 4.6)) * 0.05;
+    const targetY = Math.abs(Math.sin(t * 5.6)) * 0.095;
     currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
   } else if (currentStance === 'airguitar') {
     const targetY = Math.abs(Math.sin(t * 4.5)) * 0.035;
