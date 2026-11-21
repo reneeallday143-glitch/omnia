@@ -117,7 +117,7 @@ const headBone = vrm.humanoid.getNormalizedBoneNode('head') || vrm.humanoid.getN
 // Load your exact file: Niecee C.vrm
 const loader = new THREE.GLTFLoader();
 loader.register((parser) => new THREE_VRM.VRMLoaderPlugin(parser));
-loader.load('./Niecee%20C.vrm', (gltf) => {
+loader.load('./NieceeC.vrm', (gltf) => {
   const vrm = gltf.userData.vrm;
   if (!vrm) { console.error('No VRM in gltf', gltf); return; }
   vrm.scene.rotation.y = Math.PI;
@@ -485,17 +485,20 @@ function applyPoseAndExpressions(dt, t) {
     if (currentExpr === 'relaxed') currentVrm.expressionManager.setValue('relaxed', 1.0);
     currentVrm.expressionManager.setValue('blinkLeft', currentExpr === 'wink' ? 1.0 : 0);
   }
-
-  if (currentStance === 'float' || currentStance === 'skyleap' || currentStance === 'holo' || currentStance === 'domain') {
-    currentVrm.scene.position.y = (currentStance === 'skyleap' ? 0.28 : 0.14) + Math.sin(t * 2.4) * 0.05;
-   currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, 0, speed);
-
+// Handle Stance Elevation & Spinning cleanly
+  if (currentStance === 'float' || currentStance === 'holo' || currentStance === 'domain') {
+    const targetY = 0.14 + Math.sin(t * 2.4) * 0.05;
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
+  } else if (currentStance === 'skyleap') {
+    const targetY = 0.28 + Math.sin(t * 2.4) * 0.05;
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, targetY, speed);
+  } else if (currentStance === 'vortex') {
     currentVrm.scene.rotation.y += dt * 3.2;
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, 0, speed);
   } else {
-    currentVrm.scene.position.y += (0 - currentVrm.scene.position.y) * speed;
+    currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, 0, speed);
   }
 }
-
 function animate() {
   requestAnimationFrame(animate);
   const dt = clock.getDelta();
