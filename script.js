@@ -119,13 +119,14 @@ const loader = new THREE.GLTFLoader();
 loader.register((parser) => new THREE_VRM.VRMLoaderPlugin(parser));
 loader.load('./Niecee%20C.vrm', (gltf) => {
   const vrm = gltf.userData.vrm;
-  THREE_VRM.VRMUtils.removeUnnecessaryVertices(gltf.scene);
-  
+  if (!vrm) { console.error('No VRM in gltf', gltf); return; }
   vrm.scene.rotation.y = Math.PI;
   scene.add(vrm.scene);
   currentVrm = vrm;
   attachCrown(vrm);
-});
+  console.log('VRM loaded!', vrm);
+}, undefined, (err) => console.error('VRM load error:', err));
+
 
 function activateBtn(btn) {
   if (!btn) return;
