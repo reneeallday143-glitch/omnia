@@ -433,16 +433,47 @@ function updateTargets(t) {
 function applyPoseAndExpressions(dt, t) {
   if (!currentVrm) return;
   const speed = Math.min(1, dt * 10);
- for (const [boneName, rot] of Object.entries(targetRot)) {
-
-  const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName[0].toLowerCase() + boneName.slice(1)) || currentVrm.humanoid.getNormalizedBoneNode(boneName);
+  
+  for (const [boneName, rot] of Object.entries(targetRot)) {
+    // Safely format bone name to lower-camelCase (e.g., LeftUpperArm -> leftUpperArm)
+    const formattedName = boneName.charAt(0).toLowerCase() + boneName.slice(1);
+    const bone = currentVrm.humanoid.getNormalizedBoneNode(formattedName) || currentVrm.humanoid.getNormalizedBoneNode(boneName);
     
-   if (!bone) continue;
-     bone.rotation.x = THREE.MathUtils.lerp(bone.rotation.x, rot.x, speed);
- bone.rotation.y = THREE.MathUtils.lerp(bone.rotation.y, rot.y, speed);
- bone.rotation.z = THREE.MathUtils.lerp(bone.rotation.z, rot.z, speed);
-
+    if (!bone) continue;
+    
+    bone.rotation.x = THREE.MathUtils.lerp(bone.rotation.x, rot.x, speed);
+    bone.rotation.y = THREE.MathUtils.lerp(bone.rotation.y, rot.y, speed);
+    bone.rotation.z = THREE.MathUtils.lerp(bone.rotation.z, rot.z, speed);
   }
+
+  if (currentVrm.expressionManager) {
+    ['happy', 'angry', 'sad', 'relaxed', 'surprised', 'oh'].forEach(k => {
+      currentVrm.expressionManager.setValue(k, 0);
+    });
+    
+    if (currentExpr === 'happy' || currentExpr === 'smug') {
+      currentVrm.expressionManager.setValue('happy', currentExpr === 'smug' ? 0.55 : 1.0);
+    }
+    if (currentExpr === 'oh') {
+      currentVrm.expressionManager.setValue('oh', 0.85);
+    }
+    if (currentExpr === 'sad' || currentExpr === 'sorrow') {
+      currentVrm.expressionManager.setValue('sad', 1.0);
+    }
+    if (currentExpr === 'angry' || currentExpr === 'furious') {
+      currentVrm.expressionManager.setValue('angry', 1.0);
+    }
+    if (currentExpr === 'surprised' || currentExpr === 'shocked') {
+      currentVrm.expressionManager.setValue('surprised', 1.0);
+    }
+    if (currentExpr === 'relaxed') {
+      currentVrm.expressionManager.setValue('relaxed', 1.0);
+    }
+    if (currentExpr === 'wink') {
+      currentVrm.expressionManager.setValue('blinkLeft', 1.0);
+    }
+  }
+}
 
   if (currentVrm.expressionManager) {
     ['happy', 'angry', 'sad', 'relaxed', 'surprised', 'oh'].forEach(k => currentVrm.expressionManager.setValue(k, 0));
