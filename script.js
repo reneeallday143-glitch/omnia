@@ -437,9 +437,10 @@ function applyPoseAndExpressions(dt, t) {
   const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName[0].toLowerCase() + boneName.slice(1)) || currentVrm.humanoid.getNormalizedBoneNode(boneName);
     
     if (!bone) continue;
-    bone.rotation.x += (rot.x - bone.rotation.x) * speed;
-    bone.rotation.y += (rot.y - bone.rotation.y) * speed;
-    bone.rotation.z += (rot.z - bone.rotation.z) * speed;
+     bone.rotation.x = THREE.MathUtils.lerp(bone.rotation.x, rot.x, speed);
+ bone.rotation.y = THREE.MathUtils.lerp(bone.rotation.y, rot.y, speed);
+ bone.rotation.z = THREE.MathUtils.lerp(bone.rotation.z, rot.z, speed);
+
   }
 
   if (currentVrm.expressionManager) {
@@ -455,7 +456,8 @@ function applyPoseAndExpressions(dt, t) {
 
   if (currentStance === 'float' || currentStance === 'skyleap' || currentStance === 'holo' || currentStance === 'domain') {
     currentVrm.scene.position.y = (currentStance === 'skyleap' ? 0.28 : 0.14) + Math.sin(t * 2.4) * 0.05;
-  } else if (currentStance === 'vortex') {
+   currentVrm.scene.position.y = THREE.MathUtils.lerp(currentVrm.scene.position.y, 0, speed);
+
     currentVrm.scene.rotation.y += dt * 3.2;
   } else {
     currentVrm.scene.position.y += (0 - currentVrm.scene.position.y) * speed;
