@@ -212,8 +212,9 @@
     </div>
   </div>
 
-  <script src="https://jsdelivr.net"></script>
-  <script src="https://jsdelivr.net"></script>
+  <!-- Cloudflare CDN (bypasses jsdelivr SSL block on your network) -->
+  <script src="https://cloudflare.com"></script>
+  <script src="https://cloudflare.com"></script>
 
   <script>
     const stageWrap = document.getElementById('stage-wrap');
@@ -222,4 +223,3 @@
     const camera = new THREE.PerspectiveCamera(34, stageWrap.clientWidth / stageWrap.clientHeight, 0.05, 30);
     camera.position.set(0, 1.25, 2.35);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
