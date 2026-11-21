@@ -433,10 +433,11 @@ function updateTargets(t) {
 function applyPoseAndExpressions(dt, t) {
   if (!currentVrm) return;
   const speed = Math.min(1, dt * 10);
+ for (const [boneName, rot] of Object.entries(targetRot)) {
 
   const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName[0].toLowerCase() + boneName.slice(1)) || currentVrm.humanoid.getNormalizedBoneNode(boneName);
     
-   if (!bone) return;
+   if (!bone) continue;
      bone.rotation.x = THREE.MathUtils.lerp(bone.rotation.x, rot.x, speed);
  bone.rotation.y = THREE.MathUtils.lerp(bone.rotation.y, rot.y, speed);
  bone.rotation.z = THREE.MathUtils.lerp(bone.rotation.z, rot.z, speed);
