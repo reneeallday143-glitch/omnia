@@ -436,7 +436,7 @@ function applyPoseAndExpressions(dt, t) {
 
   const bone = currentVrm.humanoid.getNormalizedBoneNode(boneName[0].toLowerCase() + boneName.slice(1)) || currentVrm.humanoid.getNormalizedBoneNode(boneName);
     
-    if (!bone) continue;
+   if (!bone) return;
      bone.rotation.x = THREE.MathUtils.lerp(bone.rotation.x, rot.x, speed);
  bone.rotation.y = THREE.MathUtils.lerp(bone.rotation.y, rot.y, speed);
  bone.rotation.z = THREE.MathUtils.lerp(bone.rotation.z, rot.z, speed);
