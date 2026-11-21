@@ -443,3 +443,47 @@ function applyPoseAndExpressions(dt, t) {
 
   if (currentVrm.expressionManager) {
     ['happy', 'angry', 'sad', 'relaxed', 'surprised', 'oh'].forEach(k => currentVrm.expressionManager.setValue(k, 0));
+    if (currentExpr === 'happy' || currentExpr === 'smug') currentVrm.expressionManager.setValue('happy', currentExpr === 'smug' ? 0.55 : 1.0);
+    if (currentExpr === 'oh') currentVrm.expressionManager.setValue('oh', 0.85);
+    if (currentExpr === 'sad' || currentExpr === 'sorrow') currentVrm.expressionManager.setValue('sad', 1.0);
+    if (currentExpr === 'angry' || currentExpr === 'furious') currentVrm.expressionManager.setValue('angry', 1.0);
+    if (currentExpr === 'surprised' || currentExpr === 'shocked') currentVrm.expressionManager.setValue('surprised', 1.0);
+    if (currentExpr === 'relaxed') currentVrm.expressionManager.setValue('relaxed', 1.0);
+    currentVrm.expressionManager.setValue('blinkLeft', currentExpr === 'wink' ? 1.0 : 0);
+  }
+
+  if (currentStance === 'float' || currentStance === 'skyleap' || currentStance === 'holo' || currentStance === 'domain') {
+    currentVrm.scene.position.y = (currentStance === 'skyleap' ? 0.28 : 0.14) + Math.sin(t * 2.4) * 0.05;
+  } else if (currentStance === 'vortex') {
+    currentVrm.scene.rotation.y += dt * 3.2;
+  } else {
+    currentVrm.scene.position.y += (0 - currentVrm.scene.position.y) * speed;
+  }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const t = clock.elapsedTime;
+
+  if (!isPaused) {
+    updateTargets(t);
+    applyPoseAndExpressions(dt, t);
+
+    particles.forEach(p => {
+      p.mesh.position.y -= p.speed * dt;
+      p.mesh.position.x += p.drift * dt;
+      if (p.mesh.position.y < 0) p.mesh.position.y = 2.8;
+    });
+  }
+
+  if (currentVrm) currentVrm.update(dt);
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = stageWrap.clientWidth / stageWrap.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(stageWrap.clientWidth, stageWrap.clientHeight);
+});
