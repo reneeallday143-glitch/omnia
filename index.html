@@ -133,28 +133,14 @@
     </div>
   </div>
 
-    <script>
-    (async () => {
-      const base = 'https://unpkg.com';
-      const libs = [
-        base + '/three@0.146.0/build/three.min.js',
-        base + '/three@0.146.0/examples/js/controls/OrbitControls.js',
-        base + '/three@0.146.0/examples/js/loaders/GLTFLoader.js',
-        base + '/@pixiv/three-vrm@1.0.9/lib/three-vrm.min.js',
-        './script.js'
-      ];
-      for (const src of libs) {
-        await new Promise((resolve) => {
-          const s = document.createElement('script');
-          s.src = src;
-          s.onload = resolve;
-          s.onerror = resolve;
-          document.body.appendChild(s);
-        });
-      }
-    })();
-  </script>
+    
+ <button class="pose-btn active" onclick="setFx('motes', this)">☀️ Solaris Mirage (Motes)</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-  
+<script type="module" src="script.js"></script>
 </body>
 </html>
+
