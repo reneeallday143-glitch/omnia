@@ -698,11 +698,11 @@ function updateTargets(t) {
     setFingerTarget('Left', 'Ring', 1.35, 0, t, 0.03);
     setFingerTarget('Left', 'Little', 1.37, 0, t, 0.03);
     setFingerTarget('Left', 'Thumb', 1.30, 0, t, 0.03);
-    setFingerTarget('Left', 'Index', -0.22, 0.30 + scissor, t, 0.04);
-    setFingerTarget('Left', 'Middle', -0.22, -0.30 - scissor, t, 0.04);
+    setFingerTarget('Left', 'Index', -0.22, 0.34 + scissor, t, 0.04);
+    setFingerTarget('Left', 'Middle', -0.22, -0.16 - scissor, t, 0.04);
     setTarget('LeftUpperArm', -0.75 + breathe, 0.15 + armSway, -0.30);
     setTarget('LeftLowerArm', 0, -2.05 - breathe * 1.2, -0.10);
-    setTarget('LeftHand', 0.08 + wristRock * 0.8, -0.15, 0.35 + armSway * 1.5);
+    setTarget('LeftHand', 0.08 + wristRock * 0.8, 0.20, 0.35 + armSway * 1.5);
   } else if (g === 'hips') {
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
@@ -713,7 +713,7 @@ function updateTargets(t) {
     });
   } else if (g === 'kheart') {
     // Korean finger heart: right hand up by her chin, thumb + index tips crossed, rest curled
-    poseFingers('Right', [1.00, 0.75, 1.45, 1.50, 1.52], [-0.45, 0.45, 0, 0, 0], t);
+    poseFingers('Right', [1.20, 0.45, 1.45, 1.50, 1.52], [0.20, 0.45, 0, 0, 0], t);
     setTarget('RightUpperArm', -0.65 + breathe, -0.15, 0.42);
     setTarget('RightLowerArm', 0, 2.05, 0.60);
     setTarget('RightHand', 0, 0.75, 0);
@@ -724,16 +724,16 @@ function updateTargets(t) {
       poseFingers(side, [0.95, -0.22, 1.38, 1.40, -0.22], [0, 0.10, 0, 0, -0.10], t);
       setTarget(`${side}UpperArm`, -0.35 + breathe, dir * 0.20, dir * -0.55);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.10);
-      setTarget(`${side}Hand`, 0, dir * -0.5, dir * 0.40);
+      setTarget(`${side}Hand`, 0, dir * -0.3, dir * 0.40);
     });
   } else if (g === 'omniaSign') {
     // Omnia Prism: both hands up in front of her face, index + thumb tips meeting into a triangle
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [0.15, -0.22, 1.35, 1.38, 1.40], [dir * -0.35, dir * 0.35, 0, 0, 0], t);
+      poseFingers(side, [0.15, -0.22, 1.35, 1.38, 1.40], [dir * -0.15, 0, 0, 0, 0], t);
       setTarget(`${side}UpperArm`, -0.60 + breathe, dir * -0.45, dir * -0.40);
-      setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.55);
-      setTarget(`${side}Hand`, 0, dir * -0.5, 0);
+      setTarget(`${side}LowerArm`, 0, dir * -1.95, 0);
+      setTarget(`${side}Hand`, 0.3, 0, dir * 0.3);
     });
   } else if (g === 'bird' || g === 'rebel2') {
     // Middle finger: one hand, or both for Double
@@ -743,22 +743,22 @@ function updateTargets(t) {
       poseFingers(side, [1.25, 1.35, -0.22, 1.38, 1.40], [0, 0, 0, 0, 0], t);
       setTarget(`${side}UpperArm`, -0.55 + breathe, dir * 0.10, dir * -0.50);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.30);
-      setTarget(`${side}Hand`, 0, dir * -0.75, 0);
+      setTarget(`${side}Hand`, 0, dir * 0.2, dir * 0.5);
     });
   } else if (g === 'westside') {
     // West Coast W: middle + ring up and split wide, index + pinky folded under the thumb
     poseFingers('Right', [1.20, 1.35, -0.22, -0.22, 1.35], [0, 0, -0.38, 0.38, 0], t);
     setTarget('RightUpperArm', -0.55 + breathe, -0.10, 0.60);
     setTarget('RightLowerArm', 0, 1.95, 0.35);
-    setTarget('RightHand', 0, 0.75, 0);
+    setTarget('RightHand', 0, 0, -0.4);
   } else if (g === 'vulcan') {
     // Vulcan salute: palm up, fingers split down the middle
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [0.18, -0.22, -0.22, -0.22, -0.22], [-0.30, -0.22, -0.10, 0.24, 0.36], t);
+      poseFingers(side, [0.18, -0.22, -0.22, -0.22, -0.22], [-0.30, -0.25, -0.17, 0.21, 0.31], t);
       setTarget(`${side}UpperArm`, -0.70 + breathe, dir * 0.15, dir * -0.32);
       setTarget(`${side}LowerArm`, 0, dir * -2.00, dir * -0.10);
-      setTarget(`${side}Hand`, 0, dir * -0.5, 0);
+      setTarget(`${side}Hand`, 0, 0, 0);
     });
   } else if (g === 'shaka') {
     // Shaka: thumb + pinky out, hand up by her ear like a phone
@@ -795,7 +795,7 @@ function updateTargets(t) {
     poseFingers('Right', [0.22, -0.22, -0.22, -0.22, -0.22], [-0.15, -0.06, 0, 0.06, 0.12], t);
     setTarget('RightUpperArm', 0.10, -0.10, -1.55);
     setTarget('RightLowerArm', 0, 0.35, waveSway);
-    setTarget('RightHand', 0, 0, waveSway * 0.8);
+    setTarget('RightHand', -0.6, 0.4, -0.4 + waveSway * 0.8);
   } else if (g === 'clap') {
     // Hyper clap: both hands in front, opening and closing together
     const clapOpen = Math.sin(t * 6.0) * 0.5 + 0.5;
