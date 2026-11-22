@@ -1,4 +1,4 @@
-// Omnia VRM Studio — script v5.2 'Real Motion': her filmed moves now drive the avatar
+// Omnia VRM Studio — script v5.4 'Real Motion': her filmed moves now drive the avatar
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -375,7 +375,7 @@ function activateBtn(btn) {
 // Her real body movement drives the body bones; finger shapes stay code-driven on top.
 const MOCAP_BONES = ['hips', 'spine', 'chest', 'neck', 'head', 'leftUpperArm', 'leftLowerArm', 'leftHand', 'rightUpperArm', 'rightLowerArm', 'rightHand', 'leftUpperLeg', 'leftLowerLeg', 'leftFoot', 'rightUpperLeg', 'rightLowerLeg', 'rightFoot'];
 let mocapClip = null, mocapClipName = '', mocapTime = 0, mocapWeight = 0, mocapTargetWeight = 0, mocapRestHip = null, mocapFrom = null, mocapFade = 1;
-const MOCAP_FADE = 0.35;
+const MOCAP_FADE = 0.22;
 const _mocapQ = {}; MOCAP_BONES.forEach(n => _mocapQ[n] = new THREE.Quaternion());
 const _mocapHip = new THREE.Vector3();
 const _mqTmp = new THREE.Quaternion();
@@ -409,7 +409,7 @@ function mocapSample(clip, time) {
 }
 function applyMocap(dt) {
   if (!currentVrm) return;
-  mocapWeight += (mocapTargetWeight - mocapWeight) * (1 - Math.exp(-dt / 0.12));
+  mocapWeight += (mocapTargetWeight - mocapWeight) * (1 - Math.exp(-dt / 0.05));
   if (mocapWeight < 0.01) { if (mocapTargetWeight === 0) { mocapClip = null; mocapClipName = ''; } return; }
   if (!mocapClip) return;
   mocapTime += dt; mocapFade += dt;
@@ -446,7 +446,7 @@ window.setHand = (gesture, btn) => {
 window.setExpr = (expr, btn) => { currentExpr = expr; activateBtn(btn); };
 
 window.setStance = (stance, btn) => {
-  const stanceMocap = { dance: 'dance', dj: 'dj', stargazer: 'stargazer', airguitar: 'airguitar', arcade: 'arcade', dab: 'dab', kpop: 'kpop', mj: 'mj', bboy: 'bboy' };
+  const stanceMocap = { dance: 'dance', dj: 'dj', stargazer: 'stargazer', airguitar: 'airguitar', arcade: 'arcade', dab: 'dab', carlton: 'carlton', dougie: 'dougie', bboy: 'bboy' };
   if (stanceMocap[stance]) { mocapPlay(stanceMocap[stance]); currentStance = 'none'; }
   else { mocapStop(); currentStance = stance; }
   document.querySelectorAll('#stance-grid .pose-btn:not(#crown-toggle), #action-grid .pose-btn').forEach(b => b.classList.remove('active'));
