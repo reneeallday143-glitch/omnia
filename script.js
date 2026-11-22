@@ -456,9 +456,9 @@ function setFingerTarget(side, finger, curl, spread = 0, t = 0, motionAmp = 0.06
     setTarget(`${side}ThumbMetacarpal`, -0.23 * c, dir * (c * 0.62), dir * (c * 0.31));
     setTarget(`${side}ThumbDistal`, 0.08 * c, 0, dir * (c * 0.38));
   } else {
-    setTarget(`${side}${finger}Proximal`, 0, dir * s, dir * (c * 0.92));
-    setTarget(`${side}${finger}Intermediate`, 0, 0, dir * (c * 0.95));
-    setTarget(`${side}${finger}Distal`, 0, 0, dir * (c * 0.62));
+    setTarget(`${side}${finger}Proximal`, 0, dir * s, -dir * (c * 1.104));
+    setTarget(`${side}${finger}Intermediate`, 0, 0, -dir * (c * 1.14));
+    setTarget(`${side}${finger}Distal`, 0, 0, -dir * (c * 0.744));
   }
 }
 
@@ -763,8 +763,8 @@ function updateTargets(t) {
   } else if (g === 'shaka') {
     // Shaka: thumb + pinky out, hand up by her ear like a phone
     poseFingers('Right', [-0.14, 1.38, 1.40, 1.40, -0.22], [-0.35, 0, 0, 0, 0.35], t);
-    setTarget('RightUpperArm', -0.15 + breathe, -0.55, 1.05);
-    setTarget('RightLowerArm', 0, 2.50, 0.20);
+    setTarget('RightUpperArm', -0.60 + breathe, -0.60, 0.60);
+    setTarget('RightLowerArm', 0, 2.60, 0);
     setTarget('RightHand', 0, 0.50, 0);
   } else if (g === 'gangster') {
     // Gangster lean: hard side lean, chin down, arms crossed low in front, one knee soft
