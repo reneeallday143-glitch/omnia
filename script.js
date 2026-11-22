@@ -1,3 +1,4 @@
+// Omnia VRM Studio — script v5.2 'Real Motion': her filmed moves now drive the avatar
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -369,8 +370,75 @@ function activateBtn(btn) {
   btn.classList.add('active');
 }
 
+
+// ===== REAL MOTION v5.0: clips captured from Niecee's own filmed moves =====
+// Her real body movement drives the body bones; finger shapes stay code-driven on top.
+const MOCAP_BONES = ['hips', 'spine', 'chest', 'neck', 'head', 'leftUpperArm', 'leftLowerArm', 'leftHand', 'rightUpperArm', 'rightLowerArm', 'rightHand', 'leftUpperLeg', 'leftLowerLeg', 'leftFoot', 'rightUpperLeg', 'rightLowerLeg', 'rightFoot'];
+let mocapClip = null, mocapClipName = '', mocapTime = 0, mocapWeight = 0, mocapTargetWeight = 0, mocapRestHip = null, mocapFrom = null, mocapFade = 1;
+const MOCAP_FADE = 0.35;
+const _mocapQ = {}; MOCAP_BONES.forEach(n => _mocapQ[n] = new THREE.Quaternion());
+const _mocapHip = new THREE.Vector3();
+const _mqTmp = new THREE.Quaternion();
+function mocapPlay(name) {
+  const c = window.MOCAP_CLIPS && window.MOCAP_CLIPS[name];
+  if (!c) return;
+  if (currentVrm) {
+    const from = { q: {}, hip: null };
+    for (const bn of MOCAP_BONES) { const b = currentVrm.humanoid.getNormalizedBoneNode(bn); if (b) from.q[bn] = b.quaternion.clone(); }
+    const hb = currentVrm.humanoid.getNormalizedBoneNode('hips');
+    if (hb) from.hip = hb.position.clone();
+    mocapFrom = from; mocapFade = 0;
+  }
+  mocapClip = c; mocapClipName = name; mocapTime = 0; mocapTargetWeight = 1;
+}
+function mocapStop() { mocapTargetWeight = 0; }
+function mocapSample(clip, time) {
+  const frames = clip.frames, n = frames.length, fps = clip.fps;
+  let f = time * fps;
+  if (clip.kind === 'loop') f = ((f % n) + n) % n; else f = Math.min(f, n - 1);
+  const i0 = Math.floor(f), fr = f - i0;
+  const i1 = clip.kind === 'loop' ? (i0 + 1) % n : Math.min(i0 + 1, n - 1);
+  const A = frames[i0], Bf = frames[i1];
+  for (const bn of MOCAP_BONES) {
+    const qa = A.q[bn], qb = Bf.q[bn];
+    _mocapQ[bn].set(qa[0], qa[1], qa[2], qa[3]);
+    _mqTmp.set(qb[0], qb[1], qb[2], qb[3]);
+    _mocapQ[bn].slerp(_mqTmp, fr);
+  }
+  _mocapHip.set(A.hip[0] + (Bf.hip[0] - A.hip[0]) * fr, A.hip[1] + (Bf.hip[1] - A.hip[1]) * fr, A.hip[2] + (Bf.hip[2] - A.hip[2]) * fr);
+}
+function applyMocap(dt) {
+  if (!currentVrm) return;
+  mocapWeight += (mocapTargetWeight - mocapWeight) * (1 - Math.exp(-dt / 0.12));
+  if (mocapWeight < 0.01) { if (mocapTargetWeight === 0) { mocapClip = null; mocapClipName = ''; } return; }
+  if (!mocapClip) return;
+  mocapTime += dt; mocapFade += dt;
+  mocapSample(mocapClip, mocapTime);
+  const fadeK = mocapFrom ? THREE.MathUtils.smoothstep(Math.min(1, mocapFade / MOCAP_FADE), 0, 1) : 1;
+  if (mocapFrom && fadeK >= 1) mocapFrom = null;
+  for (const bn of MOCAP_BONES) {
+    const bone = currentVrm.humanoid.getNormalizedBoneNode(bn);
+    if (!bone) continue;
+    if (mocapFrom && mocapFrom.q[bn]) { _mqTmp.copy(mocapFrom.q[bn]).slerp(_mocapQ[bn], fadeK); bone.quaternion.slerp(_mqTmp, mocapWeight); }
+    else bone.quaternion.slerp(_mocapQ[bn], mocapWeight);
+  }
+  const hipsBone = currentVrm.humanoid.getNormalizedBoneNode('hips');
+  if (hipsBone) {
+    if (!mocapRestHip) mocapRestHip = hipsBone.position.clone();
+    const dx = _mocapHip.x, dy = _mocapHip.y, dz = _mocapHip.z;
+    let tx = dx, ty = dy, tz = dz;
+    if (mocapFrom && mocapFrom.hip) { tx = mocapFrom.hip.x + (dx - mocapFrom.hip.x) * fadeK; ty = mocapFrom.hip.y + (dy - mocapFrom.hip.y) * fadeK; tz = mocapFrom.hip.z + (dz - mocapFrom.hip.z) * fadeK; }
+    hipsBone.position.set(
+      mocapRestHip.x + (tx - mocapRestHip.x) * mocapWeight,
+      mocapRestHip.y + (ty - mocapRestHip.y) * mocapWeight,
+      mocapRestHip.z + (tz - mocapRestHip.z) * mocapWeight);
+  }
+}
+
 window.setHand = (gesture, btn) => {
   currentHand = gesture;
+  const mocapFor = { kheart: 'kheart', peace: 'peace', shaka: 'shaka', rock: 'rock', rebel2: 'rebel2', crossedArms: 'folded' };
+  if (mocapFor[gesture]) mocapPlay(mocapFor[gesture]); else mocapStop();
   document.querySelectorAll('#hand-grid .pose-btn, #attitude-grid .pose-btn, #action-grid .pose-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 };
@@ -378,13 +446,16 @@ window.setHand = (gesture, btn) => {
 window.setExpr = (expr, btn) => { currentExpr = expr; activateBtn(btn); };
 
 window.setStance = (stance, btn) => {
-  currentStance = stance;
+  const stanceMocap = { dance: 'dance', dj: 'dj', stargazer: 'stargazer', airguitar: 'airguitar', arcade: 'arcade', dab: 'dab', kpop: 'kpop', mj: 'mj', bboy: 'bboy' };
+  if (stanceMocap[stance]) { mocapPlay(stanceMocap[stance]); currentStance = 'none'; }
+  else { mocapStop(); currentStance = stance; }
   document.querySelectorAll('#stance-grid .pose-btn:not(#crown-toggle), #action-grid .pose-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 };
 
 window.toggleCrown = () => {
   crownVisible = !crownVisible;
+  if (crownVisible) mocapPlay('crown'); else if (mocapClipName === 'crown') mocapStop();
   if (crownGroup) crownGroup.visible = crownVisible;
   const toggleBtn = document.getElementById('crown-toggle');
   if (toggleBtn) toggleBtn.classList.toggle('active', crownVisible);
@@ -915,6 +986,7 @@ function animate() {
     if (currentVrm) {
       updateTargets(t);
       applyPoseAndExpressions(dt, t);
+      applyMocap(dt);
     }
   }
 
