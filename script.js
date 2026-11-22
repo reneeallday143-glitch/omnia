@@ -1,4 +1,4 @@
-// Omnia VRM Studio — script v5.4 'Real Motion': her filmed moves now drive the avatar
+// Omnia VRM Studio — script v5.6 'Real Motion': her filmed moves now drive the avatar
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -446,7 +446,7 @@ window.setHand = (gesture, btn) => {
 window.setExpr = (expr, btn) => { currentExpr = expr; activateBtn(btn); };
 
 window.setStance = (stance, btn) => {
-  const stanceMocap = { dance: 'dance', dj: 'dj', stargazer: 'stargazer', airguitar: 'airguitar', arcade: 'arcade', dab: 'dab', carlton: 'carlton', dougie: 'dougie', bboy: 'bboy' };
+  const stanceMocap = { dance: 'dance', dj: 'dj', stargazer: 'stargazer', airguitar: 'airguitar', arcade: 'arcade', dab: 'dab', carlton: 'carlton', dougie: 'dougie', bboy: 'bboy', chickennoodle: 'chickennoodle' };
   if (stanceMocap[stance]) { mocapPlay(stanceMocap[stance]); currentStance = 'none'; }
   else { mocapStop(); currentStance = stance; }
   document.querySelectorAll('#stance-grid .pose-btn:not(#crown-toggle), #action-grid .pose-btn').forEach(b => b.classList.remove('active'));
