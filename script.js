@@ -1,7 +1,11 @@
-// Omnia VRM Studio — script v5.8 'Real Motion + Real Fingers': v5.7 excitement amp,
-// plus finger curls measured from Niecee's own close-up hand video (Nov 27, 2026).
-// Gesture buttons (peace, kheart, rock, shaka, bird, rebel2, omniaSign) now use her
-// real bends. Nothing else changed from v5.7.
+// Omnia VRM Studio — script v5.9 'Stand and do the sign': v5.8's finger curls
+// measured from Niecee's own close-up hand video are UNCHANGED — but the 7 signs
+// are now PURE code poses. Tapping one no longer plays its mocap clip (the clip
+// used to override the code arms and morph the sign — Korean Heart showed three
+// different looks in seconds). The avatar STANDS STILL and HOLDS the sign, palm
+// to the camera, like her close-up hand video. Arms + wrists re-posed per sign
+// (lab53/53b); Peace moved to her RIGHT hand (her video hand). v5.7 excitement
+// amp kept. Everything else (stances, dances, expressions, backgrounds) untouched.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -444,8 +448,18 @@ function applyMocap(dt) {
 
 window.setHand = (gesture, btn) => {
   currentHand = gesture;
-  const mocapFor = { kheart: 'kheart', peace: 'peace', shaka: 'shaka', rock: 'rock', rebel2: 'rebel2', crossedArms: 'folded' };
+  // v5.9: the 7 measured signs are PURE code poses — no mocap clip. The clips used
+  // to override the code arms and morph the sign (Korean Heart showed three looks
+  // in seconds), so they are decoupled: only crossedArms still plays its clip.
+  // Tapping a sign also clears any active stance, so the avatar STANDS STILL
+  // while holding the sign instead of grooving underneath it.
+  const SIGN_POSES = ['kheart', 'peace', 'shaka', 'rock', 'bird', 'rebel2', 'omniaSign'];
+  const mocapFor = { crossedArms: 'folded' };
   if (mocapFor[gesture]) mocapPlay(mocapFor[gesture]); else mocapStop();
+  if (SIGN_POSES.includes(gesture)) {
+    currentStance = 'none';
+    document.querySelectorAll('#stance-grid .pose-btn:not(#crown-toggle), #action-grid .pose-btn').forEach(b => b.classList.remove('active'));
+  }
   document.querySelectorAll('#hand-grid .pose-btn, #attitude-grid .pose-btn, #action-grid .pose-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 };
@@ -586,6 +600,22 @@ function updateTargets(t) {
 
   setTarget('Spine', breathe * 0.35, 0, 0);
   setTarget('Head', Math.sin(t * 1.1) * 0.03, Math.cos(t * 0.9) * 0.04, 0);
+
+  // v5.9: the mocap player drives chest/neck/hips/legs/feet, but nothing in the
+  // code pose ever reset them — after a clip stopped, the torso stayed twisted
+  // and the legs stayed frozen mid-dance, so a sign landed ~8cm off its pose
+  // (lab54: chest stuck at (-0.07, 0.11, 0.07) after the kheart clip). The idle
+  // defaults now re-drive every mocap bone to rest, so the avatar always comes
+  // back to standing when no stance or clip is active. Stance branches run
+  // after this and override the ones they need.
+  setTarget('Chest', 0, 0, 0);
+  setTarget('Neck', 0, 0, 0);
+  setTarget('Hips', 0, 0, 0);
+  ['Left', 'Right'].forEach(side => {
+    setTarget(`${side}UpperLeg`, 0, 0, 0);
+    setTarget(`${side}LowerLeg`, 0, 0, 0);
+    setTarget(`${side}Foot`, 0, 0, 0);
+  });
 
   if (currentStance === 'sprint') {
     const run = Math.sin(t * 8.0);
@@ -789,15 +819,17 @@ function updateTargets(t) {
     // partway (she holds them with the thumb, tips tucked not pressed flat);
     // index/middle stay straight. Thumb uses the hold pose so its tip lands
     // on the folded ring finger (sim: 3.6cm away; her video: 1.3cm).
+    // v5.9: RIGHT hand now — her video hand. Pure code pose: she stands still,
+    // hand up beside her face, palm to the camera, V clear (lab53: palm 1.00).
     const scissor = 0;
-    setFingerTarget('Left', 'Ring', 1.02, 0, t, 0.03);
-    setFingerTarget('Left', 'Little', 1.16, 0, t, 0.03);
-    poseThumbHold('Left', 1.20, 'A', t, 0.03);
-    setFingerTarget('Left', 'Index', 0.23, 0.34 + scissor, t, 0.04);
-    setFingerTarget('Left', 'Middle', 0.13, -0.16 - scissor, t, 0.04);
-    setTarget('LeftUpperArm', -0.75 + breathe, 0.15 + armSway, -0.30);
-    setTarget('LeftLowerArm', 0, -2.05 - breathe * 1.2, -0.10);
-    setTarget('LeftHand', 0.08 + wristRock * 0.8, 0.20, 0.35 + armSway * 1.5);
+    setFingerTarget('Right', 'Ring', 1.02, 0, t, 0.03);
+    setFingerTarget('Right', 'Little', 1.16, 0, t, 0.03);
+    poseThumbHold('Right', 1.20, 'A', t, 0.03);
+    setFingerTarget('Right', 'Index', 0.23, 0.34 + scissor, t, 0.04);
+    setFingerTarget('Right', 'Middle', 0.13, -0.16 - scissor, t, 0.04);
+    setTarget('RightUpperArm', -0.815 + breathe, -0.145 + armSway, 0.450);
+    setTarget('RightLowerArm', 0, 2.010 + breathe * 1.2, 0.100);
+    setTarget('RightHand', 0.430 + wristRock * 0.8, -0.300, -0.685 + armSway * 1.5);
   } else if (g === 'hips') {
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
@@ -812,9 +844,13 @@ function updateTargets(t) {
     // BACKWARDS — index nearly straight (0.20) and thumb curled (1.60). Her video
     // shows the index bent right over (157 deg) and the thumb straight across (52 deg).
     poseFingers('Right', [1.10, 1.09, 1.39, 1.40, 1.39], [-0.20, 0.60, 0, 0, 0], t);
-    setTarget('RightUpperArm', -0.65 + breathe, -0.15, 0.42);
-    setTarget('RightLowerArm', 0, 2.05, 0.60);
-    setTarget('RightHand', 0, 0.75, 0);
+    // v5.9: wrist flipped — v5.8 had the hand upside down (palm to the floor,
+    // fingers pointing down), which read as a small edge-on claw. Now the hand
+    // is upright by her cheek, palm to the camera, pinch facing you (lab53b:
+    // palm 1.00, hand axis 1.00).
+    setTarget('RightUpperArm', -0.735 + breathe, -0.245, 1.030);
+    setTarget('RightLowerArm', -0.220, 2.010, 0.640);
+    setTarget('RightHand', 0.790, -0.380, -0.745);
   } else if (g === 'rock') {
     // Rock on: both hands up, index + pinky out, middle + ring held down by the thumb
     // v5.8: measured from her close-up hand video (7-10s). Middle/ring fold partway
@@ -823,9 +859,12 @@ function updateTargets(t) {
       const dir = side === 'Left' ? 1 : -1;
       poseFingers(side, [1.10, 0.16, 1.08, 1.06, 0.45], [0, 0.10, 0, 0, -0.10], t);
       poseThumbHold(side, 1.10, 'B', t);
-      setTarget(`${side}UpperArm`, -0.35 + breathe, dir * 0.20, dir * -0.55);
-      setTarget(`${side}LowerArm`, dir * 0.4, dir * -1.95, dir * 0.7);
-      setTarget(`${side}Hand`, 0, 0, 0);
+      // v5.9: symmetric now — v5.8 mirrored the LowerArm x (dir*0.4), which put
+      // the right hand BEHIND her body. Both hands up at shoulder height, palms
+      // to the camera, index + pinky up (lab53: palms 0.98, fingers up 0.93).
+      setTarget(`${side}UpperArm`, -0.465 + breathe, dir * -0.255, dir * -0.830);
+      setTarget(`${side}LowerArm`, -0.090, dir * -1.640, dir * 0.555);
+      setTarget(`${side}Hand`, 0.610, dir * -0.200, dir * 0.610);
     });
   } else if (g === 'omniaSign') {
     // Omnia Prism: both hands up in front of her face, index + thumb tips meeting into a triangle
@@ -835,9 +874,14 @@ function updateTargets(t) {
       const dir = side === 'Left' ? 1 : -1;
       const idxCurl = side === 'Left' ? 0.20 : 0.22;
       poseFingers(side, [0.18, idxCurl, 0.12, 0.12, 0.12], [-0.30, 0, 0, 0, 0], t);
-      setTarget(`${side}UpperArm`, -0.25 + breathe, dir * -0.45, dir * -0.38);
-      setTarget(`${side}LowerArm`, 0, dir * -2.25, 0);
-      setTarget(`${side}Hand`, 0.3, dir * 0.3, dir * 0.3);
+      // v5.9: hands FORWARD at upper-chest height, palms to the camera, triangle
+      // held out from the body — v5.8 had them on her face, palms sideways, the
+      // triangle plastered over her mouth. Index tips meet at the top, thumbs
+      // meet at the bottom, her face fully visible above and through it (lab53b:
+      // palms 1.00, index tips 1.7cm apart, thumb tips 0.2cm apart).
+      setTarget(`${side}UpperArm`, -0.360 + breathe, dir * -0.710, dir * -0.520);
+      setTarget(`${side}LowerArm`, -0.175, dir * -1.490, dir * -0.370);
+      setTarget(`${side}Hand`, 1.195, dir * 0.435, dir * 0.960);
     });
   } else if (g === 'bird' || g === 'rebel2') {
     // Middle finger: one hand, or both for Double
@@ -852,9 +896,17 @@ function updateTargets(t) {
         : [1.20, 0.91, 0.25, 1.04, 1.05];
       poseFingers(side, curls, [0, 0, 0, 0, 0], t);
       poseThumbHold(side, 1.20, 'A', t);
-      setTarget(`${side}UpperArm`, -0.55 + breathe, dir * 0.10, dir * -0.50);
-      setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.30);
-      setTarget(`${side}Hand`, 0.6, dir * 0.45, dir * 0.6);
+      // v5.9: palms squared to the camera, middle finger vertical. Bird and
+      // Double now have their own arm values (they shared one block before).
+      if (g === 'bird') {
+        setTarget(`${side}UpperArm`, -0.650 + breathe, dir * -0.155, dir * -0.730);
+        setTarget(`${side}LowerArm`, -0.080, dir * -1.620, dir * -0.300);
+        setTarget(`${side}Hand`, 0.635, dir * 0.360, dir * 1.125);
+      } else { // rebel2: both hands up, middle fingers vertical
+        setTarget(`${side}UpperArm`, -0.795 + breathe, dir * 0.005, dir * -0.770);
+        setTarget(`${side}LowerArm`, -0.120, dir * -1.460, dir * -0.275);
+        setTarget(`${side}Hand`, 0.745, dir * 0.060, dir * 1.050);
+      }
     });
   } else if (g === 'westside') {
     // West Coast W (her reference photo): thumb out, index+middle+ring+pinky up, ring crossed over middle, palm forward
@@ -878,9 +930,11 @@ function updateTargets(t) {
     // which is why it stuck out wrong. Thumb is straight out (0.15); pinky spread
     // widened to match her 59-deg ring-pinky gap.
     poseFingers('Right', [0.15, 1.19, 1.36, 1.18, 0.18], [-1.30, 0, 0, 0, 0.80], t);
-    setTarget('RightUpperArm', -0.60 + breathe, -0.60, 0.60);
-    setTarget('RightLowerArm', 0, 2.60, 0);
-    setTarget('RightHand', 0.3, 0, -0.4);
+    // v5.9: hand upright by her ear, palm to the camera — v5.8 had the hand
+    // edge-on with the fingers pointing AT the camera (lab53: palm 1.00).
+    setTarget('RightUpperArm', -0.675 + breathe, -0.095, 0.510);
+    setTarget('RightLowerArm', 0, 1.990, 0);
+    setTarget('RightHand', 0.485, -0.325, -0.650);
   } else if (g === 'gangster') {
     // Gangster lean: hard side lean, chin down, arms crossed low in front, one knee soft
     setTarget('Spine', -0.08, 0, 0.10);
