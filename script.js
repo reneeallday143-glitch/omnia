@@ -1,11 +1,16 @@
-// Omnia VRM Studio — script v5.9 'Stand and do the sign': v5.8's finger curls
-// measured from Niecee's own close-up hand video are UNCHANGED — but the 7 signs
-// are now PURE code poses. Tapping one no longer plays its mocap clip (the clip
-// used to override the code arms and morph the sign — Korean Heart showed three
-// different looks in seconds). The avatar STANDS STILL and HOLDS the sign, palm
-// to the camera, like her close-up hand video. Arms + wrists re-posed per sign
-// (lab53/53b); Peace moved to her RIGHT hand (her video hand). v5.7 excitement
-// amp kept. Everything else (stances, dances, expressions, backgrounds) untouched.
+// Omnia VRM Studio — script v6.0 'Ren joins the stage': v5.9's poses, fingers,
+// dances and mocap are UNCHANGED — but now there are TWO models. Ren (Niecee's
+// male avatar, built by her in VRoid Studio, VRM 1.0) loads from Ren_1_tfkr.vrm
+// and the script injects a Niecee/Ren switcher into the sidebar at runtime, so
+// she still pastes ONE file (no index.html change). The same poses, expressions,
+// dances and mocap clips drive whichever model is active. The gold crown is
+// Niecee's only — it never attaches to Ren. Ren is ~19% taller than Niecee
+// (lab55: height 1.958 vs 1.640, hips 1.118 vs 0.939), so the camera home and
+// Face Cam positions scale per model, and the mocap hip travel is scaled to
+// the active model's size (her hip dips would sink his feet 5.5cm under the
+// floor unscaled — lab56). For Niecee the hip scale is exactly 1.0, so her
+// movement is byte-for-byte the v5.9 behaviour. Switching clears all mocap
+// state and spring velocities so no motion bleeds from one model to the other.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -357,19 +362,122 @@ function attachCrown(vrm) {
   }
 }
 
-// Automatically load your model file on startup
+// ===== MODEL SWITCHER (v6.0): Niecee + Ren =====
+// Ren's file must sit next to script.js in the repo as Ren_1_tfkr.vrm (the exact
+// name Niecee exported). Same Pages origin as Niecee C.vrm, so no CORS issue.
+// She can rename it to Ren.vrm if she wants — but then MODELS.ren.url must
+// change to './Ren.vrm' to match.
+const MODELS = {
+  niecee: { label: 'Niecee', url: './Niecee%20C.vrm' },
+  ren: { label: 'Ren', url: './Ren_1_tfkr.vrm' }
+};
+let activeModel = 'niecee';
+const loadedModels = {}; // key -> vrm (kept in memory so switching back is instant)
+let modelLoading = null; // key currently loading, or null
+let modelStatusEl = null; // status line under the switcher buttons (injected below)
+// Camera framing per model, measured lab55: Ren is 1.19x her height
+// (1.958 vs 1.640; hips 1.118 vs 0.939; head 1.723 vs 1.417). Niecee's
+// numbers are exactly the v5.9 values — her framing does not change.
+const CAMERA_HOME = {
+  niecee: { camY: 1.25, targetY: 1.05 },
+  ren: { camY: 1.49, targetY: 1.25 }
+};
+const CAMERA_FACE = {
+  niecee: { cam: [0, 1.44, 0.90], target: [0, 1.42, 0] },
+  ren: { cam: [0, 1.75, 1.07], target: [0, 1.73, 0] }
+};
+
+function setModelStatus(msg) { if (modelStatusEl) modelStatusEl.textContent = msg; }
+
+function updateModelButtons() {
+  document.querySelectorAll('.model-btn').forEach(b => {
+    const k = b.dataset.model;
+    b.classList.toggle('active', k === activeModel);
+    b.textContent = (k === 'niecee' ? '💗 Niecee' : '🖤 Ren') + (modelLoading === k ? ' …' : '');
+  });
+}
+
+function activateModel(key, vrm) {
+  // Stop every trace of motion state from the previous model so nothing bleeds
+  // across: a clip mid-play holds a snapshot of the OLD model's bones, and
+  // mocapRestHip is the OLD model's rest hip height. Both must be cleared.
+  mocapStop(); mocapClip = null; mocapClipName = ''; mocapFrom = null; mocapRestHip = null;
+  mocapWeight = 0; mocapTargetWeight = 0; mocapTime = 0; mocapFade = 1;
+  for (const k in boneVel) delete boneVel[k];
+  if (currentVrm) scene.remove(currentVrm.scene);
+  currentVrm = vrm;
+  vrm.scene.rotation.y = modelFlipped ? Math.PI : 0;
+  vrm.scene.position.set(0, 0, 0);
+  scene.add(vrm.scene);
+  activeModel = key;
+  const home = CAMERA_HOME[key];
+  camera.position.set(0, home.camY, 2.35);
+  controls.target.set(0, home.targetY, 0);
+  controls.update();
+  // The gold crown is Niecee's only — it never attaches to Ren. On Ren the
+  // existing crown is taken off the stage; switching back rebuilds it on her.
+  if (key === 'niecee') attachCrown(vrm);
+  else if (crownGroup && crownGroup.parent) crownGroup.parent.remove(crownGroup);
+  const ct = document.getElementById('crown-toggle');
+  if (ct) {
+    ct.style.opacity = key === 'niecee' ? '' : '0.35';
+    ct.style.pointerEvents = key === 'niecee' ? '' : 'none';
+  }
+  updateModelButtons();
+}
+
+function loadModel(key) {
+  if (key === activeModel && currentVrm) return;
+  if (loadedModels[key]) { activateModel(key, loadedModels[key]); setModelStatus(''); return; }
+  if (modelLoading === key) return; // already fetching — Niecee stays on stage meanwhile
+  modelLoading = key;
+  setModelStatus('Loading ' + MODELS[key].label + '…');
+  updateModelButtons();
+  loader.load(MODELS[key].url, (gltf) => {
+    modelLoading = null;
+    const vrm = gltf.userData.vrm;
+    if (!vrm) {
+      setModelStatus('Could not load ' + MODELS[key].label + ' — that file has no VRM in it.');
+      updateModelButtons();
+      return;
+    }
+    VRMUtils.removeUnnecessaryVertices(gltf.scene);
+    vrm.scene.rotation.y = 0;
+    loadedModels[key] = vrm;
+    activateModel(key, vrm);
+    setModelStatus('');
+    console.log(MODELS[key].label + ' loaded successfully!');
+  }, undefined, (err) => {
+    modelLoading = null;
+    console.error('VRM load error:', err);
+    // Plain words, no silent fallback: Niecee stays on stage, Ren is not faked.
+    setModelStatus('Could not load ' + MODELS[key].label + ' — upload ' + MODELS[key].url.replace('./', '') + ' to the repo first, then tap again.');
+    updateModelButtons();
+  });
+}
+
+window.switchModel = (key) => { loadModel(key); };
+
+// Inject the model switcher into the sidebar (no index.html change needed).
+// Runs at module load, after the sidebar exists in the DOM.
+(function injectModelSwitcher() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = '<div class="section-title">MODEL — WHO IS ON STAGE</div>' +
+    '<div class="grid-2">' +
+    '<button class="pose-btn model-btn active" data-model="niecee" onclick="switchModel(\'niecee\')">💗 Niecee</button>' +
+    '<button class="pose-btn model-btn" data-model="ren" onclick="switchModel(\'ren\')">🖤 Ren</button>' +
+    '</div>' +
+    '<div id="model-status" style="font-size:11px;color:#f0abfc;margin-top:6px;min-height:14px;"></div>';
+  sidebar.insertBefore(wrap, sidebar.firstChild);
+  modelStatusEl = document.getElementById('model-status');
+})();
+
+// Automatically load your model file on startup (Niecee first, as always)
 const loader = new GLTFLoader();
 loader.register(parser => new VRMLoaderPlugin(parser));
-loader.load('./Niecee%20C.vrm', (gltf) => {
-  const vrm = gltf.userData.vrm;
-  if (!vrm) { console.error('No VRM found in gltf'); return; }
-  VRMUtils.removeUnnecessaryVertices(gltf.scene);
-  vrm.scene.rotation.y = 0;
-  scene.add(vrm.scene);
-  currentVrm = vrm;
-  attachCrown(vrm);
-  console.log('Niecee C.vrm loaded successfully!');
-}, undefined, (err) => console.error('VRM load error:', err));
+loadModel('niecee');
 
 function activateBtn(btn) {
   if (!btn) return;
@@ -382,6 +490,12 @@ function activateBtn(btn) {
 // Her real body movement drives the body bones; finger shapes stay code-driven on top.
 const MOCAP_BONES = ['hips', 'spine', 'chest', 'neck', 'head', 'leftUpperArm', 'leftLowerArm', 'leftHand', 'rightUpperArm', 'rightLowerArm', 'rightHand', 'leftUpperLeg', 'leftLowerLeg', 'leftFoot', 'rightUpperLeg', 'rightLowerLeg', 'rightFoot'];
 let mocapClip = null, mocapClipName = '', mocapTime = 0, mocapWeight = 0, mocapTargetWeight = 0, mocapRestHip = null, mocapFrom = null, mocapFade = 1;
+// v6.0: every mocap clip was captured from NIecee, so its hip track is HER metres.
+// HER_REST_HIP is her hips bone at rest, measured on her real model (lab55).
+// The clip's hip DEVIATION from that rest is scaled by (active model's rest hip
+// height / her rest hip height) — 1.0 for her (behaviour unchanged, exactly),
+// ~1.19 for Ren — so his longer legs get proportionally bigger hip travel and
+// his feet stay on the floor instead of sinking through it (lab56: -0.055m).
 const MOCAP_FADE = 0.22;
 const _mocapQ = {}; MOCAP_BONES.forEach(n => _mocapQ[n] = new THREE.Quaternion());
 const _mocapHip = new THREE.Vector3();
@@ -437,12 +551,25 @@ function applyMocap(dt) {
   if (hipsBone) {
     if (!mocapRestHip) mocapRestHip = hipsBone.position.clone();
     const dx = _mocapHip.x, dy = _mocapHip.y, dz = _mocapHip.z;
+    // v6.0 per-model hip scale (see decl above): deviation from HER rest hip,
+    // scaled to the active model's size. The crossfade reference r0 is chosen
+    // so the hips are continuous at clip start (no snap) and land on the
+    // scaled clip deviation at full fade — for Niecee (scale 1.0) this reduces
+    // to the exact v5.9 formula.
+    const HER_REST_HIP = { x: 0, y: 0.9392, z: 0.0036 };
+    const hipScale = mocapRestHip.y / HER_REST_HIP.y;
     let tx = dx, ty = dy, tz = dz;
-    if (mocapFrom && mocapFrom.hip) { tx = mocapFrom.hip.x + (dx - mocapFrom.hip.x) * fadeK; ty = mocapFrom.hip.y + (dy - mocapFrom.hip.y) * fadeK; tz = mocapFrom.hip.z + (dz - mocapFrom.hip.z) * fadeK; }
+    let rx = HER_REST_HIP.x, ry = HER_REST_HIP.y, rz = HER_REST_HIP.z;
+    if (mocapFrom && mocapFrom.hip) {
+      const fh = mocapFrom.hip;
+      tx = fh.x + (dx - fh.x) * fadeK; ty = fh.y + (dy - fh.y) * fadeK; tz = fh.z + (dz - fh.z) * fadeK;
+      const r0x = fh.x - (fh.x - mocapRestHip.x) / hipScale, r0y = fh.y - (fh.y - mocapRestHip.y) / hipScale, r0z = fh.z - (fh.z - mocapRestHip.z) / hipScale;
+      rx = r0x + (HER_REST_HIP.x - r0x) * fadeK; ry = r0y + (HER_REST_HIP.y - r0y) * fadeK; rz = r0z + (HER_REST_HIP.z - r0z) * fadeK;
+    }
     hipsBone.position.set(
-      mocapRestHip.x + (tx - mocapRestHip.x) * mocapWeight,
-      mocapRestHip.y + (ty - mocapRestHip.y) * mocapWeight * 1.25,
-      mocapRestHip.z + (tz - mocapRestHip.z) * mocapWeight);
+      mocapRestHip.x + (tx - rx) * hipScale * mocapWeight,
+      mocapRestHip.y + (ty - ry) * hipScale * mocapWeight * 1.25,
+      mocapRestHip.z + (tz - rz) * hipScale * mocapWeight);
   }
 }
 
@@ -475,6 +602,8 @@ window.setStance = (stance, btn) => {
 };
 
 window.toggleCrown = () => {
+  // v6.0: the crown is Niecee's only — on Ren the button is dimmed and this is a no-op.
+  if (activeModel !== 'niecee') return;
   crownVisible = !crownVisible;
   if (crownVisible) mocapPlay('crown'); else if (mocapClipName === 'crown') mocapStop();
   if (crownGroup) crownGroup.visible = crownVisible;
@@ -501,8 +630,10 @@ window.zoomCam = (delta) => {
 };
 
 window.faceCam = () => {
-  camera.position.set(0, 1.44, 0.90);
-  controls.target.set(0, 1.42, 0);
+  // v6.0: Face Cam frames the ACTIVE model's face — Ren's head sits higher.
+  const f = CAMERA_FACE[activeModel] || CAMERA_FACE.niecee;
+  camera.position.set(f.cam[0], f.cam[1], f.cam[2]);
+  controls.target.set(f.target[0], f.target[1], f.target[2]);
   controls.update();
 };
 
