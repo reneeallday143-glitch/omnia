@@ -1,4 +1,7 @@
-// Omnia VRM Studio — script v5.6 'Real Motion': her filmed moves now drive the avatar
+// Omnia VRM Studio — script v5.8 'Real Motion + Real Fingers': v5.7 excitement amp,
+// plus finger curls measured from Niecee's own close-up hand video (Nov 27, 2026).
+// Gesture buttons (peace, kheart, rock, shaka, bird, rebel2, omniaSign) now use her
+// real bends. Nothing else changed from v5.7.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -379,6 +382,8 @@ const MOCAP_FADE = 0.22;
 const _mocapQ = {}; MOCAP_BONES.forEach(n => _mocapQ[n] = new THREE.Quaternion());
 const _mocapHip = new THREE.Vector3();
 const _mqTmp = new THREE.Quaternion();
+const _mqTmp2 = new THREE.Quaternion();
+const _mocapSnap = {};
 function mocapPlay(name) {
   const c = window.MOCAP_CLIPS && window.MOCAP_CLIPS[name];
   if (!c) return;
@@ -414,13 +419,15 @@ function applyMocap(dt) {
   if (!mocapClip) return;
   mocapTime += dt; mocapFade += dt;
   mocapSample(mocapClip, mocapTime);
+  for (const bn of MOCAP_BONES) { const b0 = currentVrm.humanoid.getNormalizedBoneNode(bn); if (b0) _mocapSnap[bn] = _mocapSnap[bn] ? _mocapSnap[bn].copy(b0.quaternion) : b0.quaternion.clone(); }
   const fadeK = mocapFrom ? THREE.MathUtils.smoothstep(Math.min(1, mocapFade / MOCAP_FADE), 0, 1) : 1;
   if (mocapFrom && fadeK >= 1) mocapFrom = null;
   for (const bn of MOCAP_BONES) {
     const bone = currentVrm.humanoid.getNormalizedBoneNode(bn);
     if (!bone) continue;
-    if (mocapFrom && mocapFrom.q[bn]) { _mqTmp.copy(mocapFrom.q[bn]).slerp(_mocapQ[bn], fadeK); bone.quaternion.slerp(_mqTmp, mocapWeight); }
-    else bone.quaternion.slerp(_mocapQ[bn], mocapWeight);
+    const ampW = Math.min(1.35, mocapWeight * 1.22); // EXCITEMENT: overshoot the source swing by 22%
+    if (mocapFrom && mocapFrom.q[bn]) { _mqTmp.copy(mocapFrom.q[bn]).slerp(_mocapQ[bn], fadeK); bone.quaternion.copy(_mocapSnap[bn]).slerp(_mqTmp, ampW); }
+    else bone.quaternion.copy(_mocapSnap[bn]).slerp(_mocapQ[bn], ampW);
   }
   const hipsBone = currentVrm.humanoid.getNormalizedBoneNode('hips');
   if (hipsBone) {
@@ -430,7 +437,7 @@ function applyMocap(dt) {
     if (mocapFrom && mocapFrom.hip) { tx = mocapFrom.hip.x + (dx - mocapFrom.hip.x) * fadeK; ty = mocapFrom.hip.y + (dy - mocapFrom.hip.y) * fadeK; tz = mocapFrom.hip.z + (dz - mocapFrom.hip.z) * fadeK; }
     hipsBone.position.set(
       mocapRestHip.x + (tx - mocapRestHip.x) * mocapWeight,
-      mocapRestHip.y + (ty - mocapRestHip.y) * mocapWeight,
+      mocapRestHip.y + (ty - mocapRestHip.y) * mocapWeight * 1.25,
       mocapRestHip.z + (tz - mocapRestHip.z) * mocapWeight);
   }
 }
@@ -536,6 +543,26 @@ function setFingerTarget(side, finger, curl, spread = 0, t = 0, motionAmp = 0.06
 // Set all five fingers of one hand at once. curls/spreads order: [Thumb, Index, Middle, Ring, Little]
 function poseFingers(side, curls, spreads, t, amp = 0.012) {
   FINGERS.forEach((f, i) => setFingerTarget(side, f, curls[i], spreads ? spreads[i] : 0, t, amp));
+}
+
+// Thumb hold (v5.8, measured from her close-up hand video): when the thumb holds
+// folded fingers down (Peace / Rock / Bird / Double), the stock opposition recipe
+// leaves its tip ~8cm from the ring fingertip — it rests near the index instead.
+// The hold pose folds the metacarpal down harder (X) and swings it further across
+// the palm (Y), so the tip lands on the held fingers (sim: Peace 3.6cm from the
+// ring tip, Bird 5.0cm from the index tip; her video: 1.3cm / 2.4cm).
+// Hold A (peace, bird, rebel2): strong swing. Hold B (rock): gentler, so the tip
+// stays clear of the extended pinky. Call AFTER poseFingers so it overrides the thumb.
+function poseThumbHold(side, curl, hold, t, amp = 0.012) {
+  const dir = side === 'Left' ? 1 : -1;
+  const wave = Math.sin(t * 1.1) * amp * 0.25;
+  const c = curl + wave;
+  const mx = hold === 'A' ? -0.80 : -0.50;
+  const my = hold === 'A' ? 1.00 : 0.75;
+  const px = hold === 'A' ? 0.65 : 0.50;
+  setTarget(`${side}ThumbMetacarpal`, mx * c, dir * (my * c), dir * (c * 0.31));
+  setTarget(`${side}ThumbProximal`, px * c, 0, dir * (c * 0.31));
+  setTarget(`${side}ThumbDistal`, 0.08 * c, 0, dir * (c * 0.38));
 }
 
 function updateTargets(t) {
@@ -758,12 +785,16 @@ function updateTargets(t) {
     setTarget('RightLowerArm', 0, 1.85, 0.80);
     setTarget('RightHand', 0.9, 0, -0.4);
   } else if (g === 'peace') {
+    // v5.8: measured from her close-up hand video (0-2s). Ring/little fold only
+    // partway (she holds them with the thumb, tips tucked not pressed flat);
+    // index/middle stay straight. Thumb uses the hold pose so its tip lands
+    // on the folded ring finger (sim: 3.6cm away; her video: 1.3cm).
     const scissor = 0;
-    setFingerTarget('Left', 'Ring', 1.35, 0, t, 0.03);
-    setFingerTarget('Left', 'Little', 1.37, 0, t, 0.03);
-    setFingerTarget('Left', 'Thumb', 1.30, 0, t, 0.03);
-    setFingerTarget('Left', 'Index', 0.18, 0.34 + scissor, t, 0.04);
-    setFingerTarget('Left', 'Middle', 0.18, -0.16 - scissor, t, 0.04);
+    setFingerTarget('Left', 'Ring', 1.02, 0, t, 0.03);
+    setFingerTarget('Left', 'Little', 1.16, 0, t, 0.03);
+    poseThumbHold('Left', 1.20, 'A', t, 0.03);
+    setFingerTarget('Left', 'Index', 0.23, 0.34 + scissor, t, 0.04);
+    setFingerTarget('Left', 'Middle', 0.13, -0.16 - scissor, t, 0.04);
     setTarget('LeftUpperArm', -0.75 + breathe, 0.15 + armSway, -0.30);
     setTarget('LeftLowerArm', 0, -2.05 - breathe * 1.2, -0.10);
     setTarget('LeftHand', 0.08 + wristRock * 0.8, 0.20, 0.35 + armSway * 1.5);
@@ -777,34 +808,50 @@ function updateTargets(t) {
     });
   } else if (g === 'kheart') {
     // Korean finger heart: right hand up by her chin, thumb + index tips crossed, rest curled
-    poseFingers('Right', [1.60, 0.20, 1.45, 1.50, 1.52], [-0.20, 0.60, 0, 0, 0], t);
+    // v5.8: measured from her close-up hand video (2.5-6s). The OLD code had it
+    // BACKWARDS — index nearly straight (0.20) and thumb curled (1.60). Her video
+    // shows the index bent right over (157 deg) and the thumb straight across (52 deg).
+    poseFingers('Right', [1.10, 1.09, 1.39, 1.40, 1.39], [-0.20, 0.60, 0, 0, 0], t);
     setTarget('RightUpperArm', -0.65 + breathe, -0.15, 0.42);
     setTarget('RightLowerArm', 0, 2.05, 0.60);
     setTarget('RightHand', 0, 0.75, 0);
   } else if (g === 'rock') {
     // Rock on: both hands up, index + pinky out, middle + ring held down by the thumb
+    // v5.8: measured from her close-up hand video (7-10s). Middle/ring fold partway
+    // (not pressed flat); the pinky stays up with its natural curve (0.45).
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [0.95, 0.18, 1.38, 1.40, 0.18], [0, 0.10, 0, 0, -0.10], t);
+      poseFingers(side, [1.10, 0.16, 1.08, 1.06, 0.45], [0, 0.10, 0, 0, -0.10], t);
+      poseThumbHold(side, 1.10, 'B', t);
       setTarget(`${side}UpperArm`, -0.35 + breathe, dir * 0.20, dir * -0.55);
       setTarget(`${side}LowerArm`, dir * 0.4, dir * -1.95, dir * 0.7);
       setTarget(`${side}Hand`, 0, 0, 0);
     });
   } else if (g === 'omniaSign') {
     // Omnia Prism: both hands up in front of her face, index + thumb tips meeting into a triangle
+    // v5.8: measured from her close-up hand video (25.5-38.5s). Her fingers are pressed
+    // TOGETHER (index-middle 5-9 deg) — the old code fanned them OUT. Spreads flattened.
     ['Left', 'Right'].forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [0.20, 0.18, 0.18, 0.18, 0.18], [-0.30, 0.20, dir * 0.15, dir * 0.30, dir * 0.45], t);
+      const idxCurl = side === 'Left' ? 0.20 : 0.22;
+      poseFingers(side, [0.18, idxCurl, 0.12, 0.12, 0.12], [-0.30, 0, 0, 0, 0], t);
       setTarget(`${side}UpperArm`, -0.25 + breathe, dir * -0.45, dir * -0.38);
       setTarget(`${side}LowerArm`, 0, dir * -2.25, 0);
       setTarget(`${side}Hand`, 0.3, dir * 0.3, dir * 0.3);
     });
   } else if (g === 'bird' || g === 'rebel2') {
     // Middle finger: one hand, or both for Double
+    // v5.8: measured from her close-up hand video (bird 19-22s, double 22.5-23s).
+    // The held fingers fold only partway (index held by the thumb, not pressed
+    // flat); her left middle bends more than her right, so the two hands differ.
     const sides = g === 'bird' ? ['Right'] : ['Left', 'Right'];
     sides.forEach(side => {
       const dir = side === 'Left' ? 1 : -1;
-      poseFingers(side, [1.25, 1.35, 0.18, 1.38, 1.40], [0, 0, 0, 0, 0], t);
+      const curls = g === 'bird' ? [1.20, 0.95, 0.24, 1.03, 1.10]
+        : side === 'Left' ? [1.20, 1.13, 0.47, 1.19, 1.15]
+        : [1.20, 0.91, 0.25, 1.04, 1.05];
+      poseFingers(side, curls, [0, 0, 0, 0, 0], t);
+      poseThumbHold(side, 1.20, 'A', t);
       setTarget(`${side}UpperArm`, -0.55 + breathe, dir * 0.10, dir * -0.50);
       setTarget(`${side}LowerArm`, 0, dir * -1.95, dir * -0.30);
       setTarget(`${side}Hand`, 0.6, dir * 0.45, dir * 0.6);
@@ -826,7 +873,11 @@ function updateTargets(t) {
     });
   } else if (g === 'shaka') {
     // Shaka: thumb + pinky out, hand up by her ear like a phone
-    poseFingers('Right', [-0.30, 1.38, 1.40, 1.40, 0.18], [-1.30, 0, 0, 0, 0.60], t);
+    // v5.8: measured from her close-up hand video (12-18.5s). The OLD thumb curl
+    // was -0.30 — negative curl bends the thumb BACKWARD in the v4.17 convention,
+    // which is why it stuck out wrong. Thumb is straight out (0.15); pinky spread
+    // widened to match her 59-deg ring-pinky gap.
+    poseFingers('Right', [0.15, 1.19, 1.36, 1.18, 0.18], [-1.30, 0, 0, 0, 0.80], t);
     setTarget('RightUpperArm', -0.60 + breathe, -0.60, 0.60);
     setTarget('RightLowerArm', 0, 2.60, 0);
     setTarget('RightHand', 0.3, 0, -0.4);
