@@ -1,16 +1,13 @@
-// Omnia VRM Studio — script v6.0 'Ren joins the stage': v5.9's poses, fingers,
-// dances and mocap are UNCHANGED — but now there are TWO models. Ren (Niecee's
-// male avatar, built by her in VRoid Studio, VRM 1.0) loads from Ren_1_tfkr.vrm
-// and the script injects a Niecee/Ren switcher into the sidebar at runtime, so
-// she still pastes ONE file (no index.html change). The same poses, expressions,
-// dances and mocap clips drive whichever model is active. The gold crown is
-// Niecee's only — it never attaches to Ren. Ren is ~19% taller than Niecee
-// (lab55: height 1.958 vs 1.640, hips 1.118 vs 0.939), so the camera home and
-// Face Cam positions scale per model, and the mocap hip travel is scaled to
-// the active model's size (her hip dips would sink his feet 5.5cm under the
-// floor unscaled — lab56). For Niecee the hip scale is exactly 1.0, so her
-// movement is byte-for-byte the v5.9 behaviour. Switching clears all mocap
-// state and spring velocities so no motion bleeds from one model to the other.
+// Omnia VRM Studio — script v6.2 'Katana on the back': v6.1's three models,
+// poses, fingers, dances and mocap are UNCHANGED — but now there is a first
+// accessory: a katana carried diagonally across the back, handle over the
+// right shoulder, built from code primitives like the crown (no model file).
+// It rides EVERY model (Niecee, Ren, the realistic girl), toggled by the
+// ⚔️ Katana button, default OFF so nobody's look changes until she turns it
+// on. Per-model fit is measured (lab61/lab61b): the sheath sits just off
+// each model's back, scaled by height. The crown is untouched and the two can
+// be on at the same time. v6.2 includes v6.1, so pasting it also brings the
+// realistic girl in (if realistic-girl.vrm is uploaded).
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -362,14 +359,121 @@ function attachCrown(vrm) {
   }
 }
 
-// ===== MODEL SWITCHER (v6.0): Niecee + Ren =====
+// ===== KATANA ACCESSORY (v6.2): the first Omnia accessory =====
+// A katana carried diagonally across the back, handle over the right shoulder
+// — the Slash logo is a katana slash, so this is the brand made wearable.
+// Built from three.js primitives in code, exactly like the crown: no external
+// model file. It rides EVERY model (Niecee, Ren, the realistic girl), unlike
+// the crown which is Niecee's only. Default OFF — nobody's look changes until
+// she turns it on.
+let katanaGroup = null;
+let katanaVisible = false;
+
+// Per-model fit, measured lab61/lab61b (outside-in rays, back surface at chest
+// height): back surface z is Niecee -0.111 (chest bone z 0.019), Ren -0.113
+// (chest 0.023), realistic girl -0.038 (chest 0.000). `back` is the chest-local
+// z of the katana centerline: back-surface distance + sheath radius + a small
+// gap, so the sheath rides just off the back instead of clipping into it —
+// plus 0.025 of motion margin, because lab61 found the lower sheath pressed
+// ~0.017-0.019 into the torso mid-dougie and in the gangster lean (the chest
+// twists but the hips don't follow it), so the first offsets were too tight —
+// plus a second 0.025 after the CORRECTED skinned measurement (lab61 v2)
+// still showed -0.016 mid-dougie on Niecee and the realistic girl, and -0.012
+// at rest on the realistic girl's shoulder-blade bulge (her back bulges to
+// -0.086 at mid-back). The clip is partly lateral (chest twist swings the
+// sheath sideways into the curved back), so the bump buys less than its full
+// size mid-dance — the renders are the check that the rest gap still reads
+// like a katana on a back and not a floating stick. tiltX was flipped to
+// +0.08 after the side renders showed the sheath floating ~6cm off the back:
+// positive tiltX brings the handle/guard closer over the shoulder (where the
+// eye reads the carry) and swings the lower sheath further back (where the
+// dougie clip happens), like a real strapped katana — top held close, tip
+// angled away.
+// scale: katana length by height ratio (Ren 1.958/1.640 = 1.19, realistic
+// 1.590/1.640 = 0.97). tiltZ: the diagonal — positive tips the handle toward
+// -X, the anatomical right shoulder (chest local +X is her left, +Y up, +Z
+// forward, measured lab61). tiltX: top forward over the shoulder, tip back.
+const KATANA_FIT = {
+  niecee:    { scale: 1.00, back: -0.205, y: 0.02, tiltZ: 0.66, tiltX: 0.08 },
+  ren:       { scale: 1.19, back: -0.215, y: 0.02, tiltZ: 0.66, tiltX: 0.08 },
+  realistic: { scale: 0.97, back: -0.115, y: 0.02, tiltZ: 0.66, tiltX: 0.08 },
+};
+
+function buildKatana(scale) {
+  const g = new THREE.Group();
+  const blackMat = new THREE.MeshStandardMaterial({ color: 0x0d0d12, metalness: 0.6, roughness: 0.35 });
+  const chromeMat = new THREE.MeshStandardMaterial({ color: 0x17171f, metalness: 0.95, roughness: 0.25 });
+  const wrapMat = new THREE.MeshStandardMaterial({ color: 0x111116, metalness: 0.1, roughness: 0.9 });
+  const pinkMat = new THREE.MeshStandardMaterial({ color: 0xff2e88, emissive: 0xff2e88, emissiveIntensity: 0.85, roughness: 0.1 });
+  const s = scale; // every size below is in Niecee metres, scaled per model
+
+  // Sheath (saya): tapered black tube, tip at the bottom (-Y), mouth at the top.
+  const sheath = new THREE.Mesh(new THREE.CylinderGeometry(0.017 * s, 0.012 * s, 0.60 * s, 20), blackMat);
+  sheath.position.y = -0.14 * s;
+  g.add(sheath);
+  // Sheath tip cap (kojiri): pink.
+  const tipCap = new THREE.Mesh(new THREE.CylinderGeometry(0.013 * s, 0.010 * s, 0.03 * s, 20), pinkMat);
+  tipCap.position.y = -0.45 * s;
+  g.add(tipCap);
+  // Pink accent line down the outward face of the sheath (-Z = away from the back).
+  const accent = new THREE.Mesh(new THREE.BoxGeometry(0.006 * s, 0.56 * s, 0.002 * s), pinkMat);
+  accent.position.set(0, -0.14 * s, -0.016 * s);
+  g.add(accent);
+  // Guard (tsuba): black-chrome disc with a glowing pink edge.
+  const guard = new THREE.Mesh(new THREE.CylinderGeometry(0.042 * s, 0.042 * s, 0.008 * s, 28), chromeMat);
+  guard.position.y = 0.17 * s;
+  g.add(guard);
+  const guardEdge = new THREE.Mesh(new THREE.TorusGeometry(0.042 * s, 0.0025 * s, 8, 36), pinkMat);
+  guardEdge.rotation.x = Math.PI / 2;
+  guardEdge.position.y = 0.17 * s;
+  g.add(guardEdge);
+  // Handle (tsuka): black-wrapped grip above the guard, pink wrap bands.
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.015 * s, 0.015 * s, 0.26 * s, 16), wrapMat);
+  handle.position.y = 0.31 * s;
+  g.add(handle);
+  for (let i = 0; i < 5; i++) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.0155 * s, 0.0022 * s, 8, 20), pinkMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = (0.20 + i * 0.055) * s;
+    g.add(ring);
+  }
+  // Pommel cap (kashira): pink.
+  const pommel = new THREE.Mesh(new THREE.CylinderGeometry(0.016 * s, 0.014 * s, 0.012 * s, 16), pinkMat);
+  pommel.position.y = 0.445 * s;
+  g.add(pommel);
+  // Cord (sageo): a pink loop around the sheath just below the guard.
+  const cord = new THREE.Mesh(new THREE.TorusGeometry(0.020 * s, 0.0025 * s, 8, 24), pinkMat);
+  cord.rotation.x = Math.PI / 2;
+  cord.position.y = 0.145 * s;
+  g.add(cord);
+  return g;
+}
+
+function attachKatana(vrm, key) {
+  if (katanaGroup && katanaGroup.parent) katanaGroup.parent.remove(katanaGroup);
+  const fit = KATANA_FIT[key] || KATANA_FIT.niecee;
+  katanaGroup = buildKatana(fit.scale);
+  const chestBone = vrm.humanoid.getNormalizedBoneNode('chest');
+  if (chestBone) {
+    katanaGroup.position.set(0, fit.y, fit.back);
+    katanaGroup.rotation.set(fit.tiltX, 0, fit.tiltZ);
+    katanaGroup.visible = katanaVisible;
+    chestBone.add(katanaGroup);
+  }
+}
+
+// ===== MODEL SWITCHER (v6.1): Niecee + Ren + the realistic girl =====
 // Ren's file must sit next to script.js in the repo as Ren_1_tfkr.vrm (the exact
-// name Niecee exported). Same Pages origin as Niecee C.vrm, so no CORS issue.
-// She can rename it to Ren.vrm if she wants — but then MODELS.ren.url must
-// change to './Ren.vrm' to match.
+// name Niecee exported). The realistic girl's file is realistic-girl.vrm —
+// upload it to the repo root the same way (Upload files, NEVER the pencil
+// icon, which wipes .vrm files to 2 bytes). Same Pages origin as Niecee C.vrm,
+// so no CORS issue.
+// She can rename Ren's file to Ren.vrm if she wants — but then MODELS.ren.url
+// must change to './Ren.vrm' to match.
 const MODELS = {
   niecee: { label: 'Niecee', url: './Niecee%20C.vrm' },
-  ren: { label: 'Ren', url: './Ren_1_tfkr.vrm' }
+  ren: { label: 'Ren', url: './Ren_1_tfkr.vrm' },
+  realistic: { label: 'Realistic Girl', url: './realistic-girl.vrm' }
 };
 let activeModel = 'niecee';
 const loadedModels = {}; // key -> vrm (kept in memory so switching back is instant)
@@ -380,20 +484,25 @@ let modelStatusEl = null; // status line under the switcher buttons (injected be
 // numbers are exactly the v5.9 values — her framing does not change.
 const CAMERA_HOME = {
   niecee: { camY: 1.25, targetY: 1.05 },
-  ren: { camY: 1.49, targetY: 1.25 }
+  ren: { camY: 1.49, targetY: 1.25 },
+  // realistic girl: height ratio 1.590/1.640 = 0.970 x Niecee's (lab58)
+  realistic: { camY: 1.21, targetY: 1.02 }
 };
 const CAMERA_FACE = {
   niecee: { cam: [0, 1.44, 0.90], target: [0, 1.42, 0] },
-  ren: { cam: [0, 1.75, 1.07], target: [0, 1.73, 0] }
+  ren: { cam: [0, 1.75, 1.07], target: [0, 1.73, 0] },
+  // realistic girl: head height ratio 1.434/1.417 = 1.012 x Niecee's (lab58)
+  realistic: { cam: [0, 1.46, 0.91], target: [0, 1.44, 0] }
 };
 
 function setModelStatus(msg) { if (modelStatusEl) modelStatusEl.textContent = msg; }
 
+const MODEL_BUTTON_LABELS = { niecee: '💗 Niecee', ren: '🖤 Ren', realistic: '💜 Realistic' };
 function updateModelButtons() {
   document.querySelectorAll('.model-btn').forEach(b => {
     const k = b.dataset.model;
     b.classList.toggle('active', k === activeModel);
-    b.textContent = (k === 'niecee' ? '💗 Niecee' : '🖤 Ren') + (modelLoading === k ? ' …' : '');
+    b.textContent = (MODEL_BUTTON_LABELS[k] || k) + (modelLoading === k ? ' …' : '');
   });
 }
 
@@ -414,10 +523,15 @@ function activateModel(key, vrm) {
   camera.position.set(0, home.camY, 2.35);
   controls.target.set(0, home.targetY, 0);
   controls.update();
-  // The gold crown is Niecee's only — it never attaches to Ren. On Ren the
-  // existing crown is taken off the stage; switching back rebuilds it on her.
+  // The gold crown is Niecee's only — it never attaches to Ren or the
+  // realistic girl. On either of them the existing crown is taken off the
+  // stage; switching back rebuilds it on her.
   if (key === 'niecee') attachCrown(vrm);
   else if (crownGroup && crownGroup.parent) crownGroup.parent.remove(crownGroup);
+  // The katana rides EVERY model — re-attach it to the new model's chest when
+  // it is on (same rebuild pattern as the crown, but not Niecee-only).
+  if (katanaVisible) attachKatana(vrm, key);
+  else if (katanaGroup && katanaGroup.parent) katanaGroup.parent.remove(katanaGroup);
   const ct = document.getElementById('crown-toggle');
   if (ct) {
     ct.style.opacity = key === 'niecee' ? '' : '0.35';
@@ -450,7 +564,8 @@ function loadModel(key) {
   }, undefined, (err) => {
     modelLoading = null;
     console.error('VRM load error:', err);
-    // Plain words, no silent fallback: Niecee stays on stage, Ren is not faked.
+    // Plain words, no silent fallback: Niecee stays on stage, the missing
+    // model is not faked.
     setModelStatus('Could not load ' + MODELS[key].label + ' — upload ' + MODELS[key].url.replace('./', '') + ' to the repo first, then tap again.');
     updateModelButtons();
   });
@@ -468,6 +583,7 @@ window.switchModel = (key) => { loadModel(key); };
     '<div class="grid-2">' +
     '<button class="pose-btn model-btn active" data-model="niecee" onclick="switchModel(\'niecee\')">💗 Niecee</button>' +
     '<button class="pose-btn model-btn" data-model="ren" onclick="switchModel(\'ren\')">🖤 Ren</button>' +
+    '<button class="pose-btn model-btn" data-model="realistic" onclick="switchModel(\'realistic\')">💜 Realistic</button>' +
     '</div>' +
     '<div id="model-status" style="font-size:11px;color:#f0abfc;margin-top:6px;min-height:14px;"></div>';
   sidebar.insertBefore(wrap, sidebar.firstChild);
@@ -602,7 +718,8 @@ window.setStance = (stance, btn) => {
 };
 
 window.toggleCrown = () => {
-  // v6.0: the crown is Niecee's only — on Ren the button is dimmed and this is a no-op.
+  // v6.0/v6.1: the crown is Niecee's only — on Ren or the realistic girl the
+  // button is dimmed and this is a no-op.
   if (activeModel !== 'niecee') return;
   crownVisible = !crownVisible;
   if (crownVisible) mocapPlay('crown'); else if (mocapClipName === 'crown') mocapStop();
@@ -610,6 +727,33 @@ window.toggleCrown = () => {
   const toggleBtn = document.getElementById('crown-toggle');
   if (toggleBtn) toggleBtn.classList.toggle('active', crownVisible);
 };
+
+window.toggleKatana = () => {
+  // v6.2: the katana works on every model, and the crown + katana can be on
+  // at the same time. Turning it on attaches it to the active model's chest;
+  // turning it off takes it off the stage entirely.
+  katanaVisible = !katanaVisible;
+  if (katanaVisible && currentVrm) attachKatana(currentVrm, activeModel);
+  else if (katanaGroup && katanaGroup.parent) katanaGroup.parent.remove(katanaGroup);
+  const btn = document.getElementById('katana-toggle');
+  if (btn) btn.classList.toggle('active', katanaVisible);
+};
+
+// Inject the katana toggle into the sidebar, right under the model switcher
+// (no index.html change needed — she still pastes ONE file). Runs after the
+// switcher IIFE above, so modelStatusEl already exists.
+(function injectKatanaToggle() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = '<div class="section-title">ACCESSORY</div>' +
+    '<div class="grid-2">' +
+    '<button id="katana-toggle" class="pose-btn" onclick="toggleKatana()">⚔️ Katana</button>' +
+    '</div>';
+  const statusWrap = modelStatusEl ? modelStatusEl.parentElement : null;
+  if (statusWrap && statusWrap.nextSibling) sidebar.insertBefore(wrap, statusWrap.nextSibling);
+  else sidebar.appendChild(wrap);
+})();
 
 window.togglePause = () => {
   isPaused = !isPaused;
